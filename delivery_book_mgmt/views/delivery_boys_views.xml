@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="delivery_boys_form_view" model="ir.ui.view">
+        <field name="name">delivery.boys.form.view</field>
+        <field name="model">delivery.boys</field>
+        <field name="arch" type="xml">
+            <form string="Delivery boy" create="0">
+                <header>
+                    <button name="action_confirm" type="object" class="btn btn-primary" string="Confirm"/>
+                    <button name="action_done" type="object" class="btn btn-primary" string="Done"/>
+                    <button name="action_refuse" type="object" class="btn btn-primary" string="Refuse"/>
+                    <button name="action_cancel" type="object" class="btn" string="Cancel"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" force_save="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Shipment information">
+                            <field name="deli_boy_id"/>
+                            <field name="deli_phone"/>
+                            <field name="deli_order_id"/>
+                            <field name="sale_id"/>
+                            <field name="fee_ship"/>
+                            <field name="cod"/>
+                            <field name="num_of_package"/>
+                            <field name="cus_receivable"/>
+                        </group>
+                        <group string="Customer information">
+                            <field name="partner_id"/>
+                            <field name="partner_phone"/>
+                            <field name="street"/>
+                            <field name="street2"/>
+                            <field name="ward_id"/>
+                            <field name="district_id"/>
+                            <field name="city_id"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Note">
+                            <group>
+                                <field name="note"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                     <field name="message_follower_ids" widget="mail_followers"/>
+                     <field name="message_ids" colspan="4" widget="mail_thread" nolabel="1"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="delivery_boys_tree_view" model="ir.ui.view">
+        <field name="name">delivery.boys.tree.view</field>
+        <field name="model">delivery.boys</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="deli_boy_id"/>
+                <field name="partner_id"/>
+                <field name="deli_order_id"/>
+                <field name="fee_ship"/>
+                <field name="cod"/>
+                <field name="num_of_package"/>
+                <field name="cus_receivable"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="delivery_boys_search_view" model="ir.ui.view">
+        <field name="name">delivery.boys.search.view</field>
+        <field name="model">delivery.boys</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="deli_boy_id"/>
+                <field name="partner_id"/>
+                <field name="deli_order_id"/>
+            </search>
+        </field>
+    </record>
+
+    <record model="ir.actions.act_window" id="delivery_boys_action_view">
+        <field name="name">Delivery Boys</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">delivery.boys</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'tree', 'view_id': ref('delivery_boys_tree_view')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('delivery_boys_form_view')})]"/>
+        <field name="search_view_id" ref="delivery_boys_search_view"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new delivery boy.
+            </p>
+        </field>
+    </record>
+
+</odoo>
