@@ -3,7 +3,7 @@ from odoo import models, fields, api
 
 class BookingViettelpostWizard(models.TransientModel):
     _name = 'booking.viettelpost.wizard'
-    _description = 'This module fills and confirms infor about shipment before creating a bill of lading Viettelpost.'
+    _description = 'This module fills and confirms info about shipment before creating a bill of lading Viettelpost.'
 
     service_type = fields.Selection(
         selection=lambda self: self.env['delivery.carrier']._get_viettelpost_service_types(),

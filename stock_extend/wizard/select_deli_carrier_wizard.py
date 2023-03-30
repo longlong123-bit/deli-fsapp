@@ -19,7 +19,16 @@ class SelectDeliveryCarrierWizard(models.TransientModel):
 
     def action_fill_shipment_info(self):
         if self.deli_carrier_id.delivery_type == 'delivery_boys':
-            ...
+            return {
+                'name': _('Delivery Boys Shipment Information'),
+                'view_mode': 'form',
+                'view_type': 'form',
+                'view_id': self.env.ref('stock_extend.booking_delivery_boys_wizard_form_view').id,
+                'res_model': 'booking.delivery.boys.wizard',
+                'context': {'default_deli_order_id': self.deli_order_id.id},
+                'type': 'ir.actions.act_window',
+                'target': 'new'
+            }
         elif self.deli_carrier_id.delivery_type == 'viettelpost':
             return {
                 'name': _('Viettelpost Shipment Information'),
