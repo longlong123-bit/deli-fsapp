@@ -18,7 +18,7 @@ class SelectDeliveryCarrierWizard(models.TransientModel):
     deli_carrier_id = fields.Many2one('delivery.carrier', required=True)
 
     def action_fill_shipment_info(self):
-        if self.deli_carrier_id.delivery_type == 'delivery_boys':
+        if self.deli_carrier_id.delivery_type == 'deli_boys':
             return {
                 'name': _('Delivery Boys Shipment Information'),
                 'view_mode': 'form',
