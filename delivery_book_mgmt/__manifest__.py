@@ -10,8 +10,7 @@
     'depends': ['base', 'mail', 'viettelpost_address', 'contacts', 'stock', 'sale'],
     'data': [
         'security/ir.model.access.csv',
-        'data/sequence.xml',
-        'views/delivery_boys_views.xml',
+        'views/delivery_book_views.xml',
         'views/menus.xml'
     ],
     'application': True

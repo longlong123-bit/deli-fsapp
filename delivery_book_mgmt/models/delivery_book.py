@@ -4,9 +4,10 @@ from odoo import models, fields
 class DeliveryBook(models.Model):
     _name = 'delivery.book'
     _inherit = ['mail.thread']
+    _rec_name = 'bl_code'
     _description = 'Manage deliveries by home shipper'
 
-    shipping_method_id = fields.Many2one('delivery.carrier', string='Shipping method', required=True, tracking=True)
+    carrier_id = fields.Many2one('delivery.carrier', string='Shipping method', required=True, tracking=True)
     deli_order_id = fields.Many2one('stock.picking', string='Delivery order', required=True, tracking=True)
     sale_id = fields.Many2one(related='deli_order_id.sale_id', string='Sale order')
     fee_ship = fields.Monetary(string='Fee ship', required=True, tracking=True)
