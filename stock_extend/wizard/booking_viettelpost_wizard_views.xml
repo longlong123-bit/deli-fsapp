@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="booking_viettelpost_wizard_form_view" model="ir.ui.view">
+        <field name="name">booking.viettelpost.wizard.form.view</field>
+        <field name="model">booking.viettelpost.wizard</field>
+        <field name="arch" type="xml">
+            <form>
+                <group>
+                    <field name="deli_order_id" force_save="1"/>
+                </group>
+                <footer>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    <button string="Booking" type="object" name="action_booking_viettelpost" class="btn btn-primary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="booking_viettelpost_wizard_action" model="ir.actions.act_window">
+        <field name="name">Booking Viettelpost</field>
+        <field name="res_model">booking.viettelpost.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>
