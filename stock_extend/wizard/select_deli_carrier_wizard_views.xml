@@ -5,9 +5,11 @@
         <field name="model">select.delivery.carrier.wizard</field>
         <field name="arch" type="xml">
             <form>
+                <div class="oe_title">
+                    <h1><field name="deli_order_id" force_save="1"/></h1>
+                </div>
                 <group>
-                    <field name="deli_order_id" force_save="1"/>
-                    <field name="deli_carrier_id" options="{'no_create_edit': True}"/>
+                    <field name="deli_carrier_id" options="{'no_create_edit': True, 'no_open': True}"/>
                 </group>
                 <footer>
                     <button string="Cancel" class="btn-secondary" special="cancel"/>
