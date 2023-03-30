@@ -6,8 +6,32 @@
         <field name="model">booking.viettelpost.wizard</field>
         <field name="arch" type="xml">
             <form>
+                <div class="oe_title">
+                    <h1><field name="deli_order_id" force_save="1"/></h1>
+                </div>
                 <group>
-                    <field name="deli_order_id" force_save="1"/>
+                    <group>
+                        <field name="deli_carrier_id"/>
+                        <field name="sender_id" options="{'no_create_edit': True, 'no_open': True}"/>
+                        <field name="service_type"/>
+                        <field name="order_payment"/>
+                        <field name="product_type"/>
+                        <field name="national_type"/>
+                    </group>
+                    <group>
+                        <field name="receiver_id" options="{'no_create_edit': True, 'no_open': True}"/>
+                        <field name="receiver_phone"/>
+                        <label for="receiver_street" string="Address"/>
+                        <div class="o_address_format">
+                            <field name="receiver_street" class="o_address_street" placeholder="Street"/>
+                            <field name="receiver_ward_id" class="o_address_city" placeholder="Ward" options="{'no_create': True, 'no_open': True}"/>
+                            <field name="receiver_district_id" class="o_address_state" placeholder="District" options="{'no_create': True, 'no_open': True}"/>
+                            <field name="receiver_province_id" class="o_address_zip" placeholder="City" options="{'no_create': True, 'no_open': True}"/>
+                        </div>
+                        <field name="deli_date"/>
+                        <field name="check_unique" widget="boolean_toggle"/>
+                        <field name="note"/>
+                    </group>
                 </group>
                 <footer>
                     <button string="Cancel" class="btn-secondary" special="cancel"/>

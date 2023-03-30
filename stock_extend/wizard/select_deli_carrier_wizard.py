@@ -27,7 +27,11 @@ class SelectDeliveryCarrierWizard(models.TransientModel):
                 'view_type': 'form',
                 'view_id': self.env.ref('stock_extend.booking_viettelpost_wizard_form_view').id,
                 'res_model': 'booking.viettelpost.wizard',
-                'context': {'default_deli_order_id': self.deli_order_id.id},
+                'context': {
+                    'default_deli_order_id': self.deli_order_id.id,
+                    'default_deli_carrier_id': self.deli_carrier_id.id,
+                    'default_receiver_id': self.deli_order_id.partner_id.id
+                },
                 'type': 'ir.actions.act_window',
                 'target': 'new'
             }
