@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="stock_picking_extend_form_view_inherit" model="ir.ui.view">
+        <field name="name">stock.picking.extend.form.view.inherit</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button string="Assign to delivery" type="action" class="btn btn-primary" name="%(select_deli_carrier_wizard_acton)d"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
