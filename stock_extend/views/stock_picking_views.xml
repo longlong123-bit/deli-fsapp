@@ -6,8 +6,11 @@
         <field name="inherit_id" ref="stock.view_picking_form"/>
         <field name="arch" type="xml">
             <xpath expr="//header" position="inside">
-                <button string="Assign to delivery" type="action" class="btn btn-primary" name="%(select_deli_carrier_wizard_acton)d"/>
+                <button string="Assign to delivery" type="action" class="btn btn-primary" name="%(select_deli_carrier_wizard_acton)d" attrs="{'invisible': [('is_allotted', '=', True)]}"/>
             </xpath>
+            <field name="is_locked" position="after">
+                <field name="is_allotted"/>
+            </field>
         </field>
     </record>
 </odoo>

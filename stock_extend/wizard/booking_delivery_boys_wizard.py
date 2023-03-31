@@ -1,5 +1,5 @@
-from odoo import fields, models, api
-
+from odoo import fields, models, api, _
+from odoo.exceptions import UserError
 
 class BookingDeliveryBoysWizard(models.TransientModel):
     _name = 'booking.delivery.boys.wizard'
@@ -10,6 +10,9 @@ class BookingDeliveryBoysWizard(models.TransientModel):
 
     def _get_info_receiver(self):
         return self.env['res.partner'].sudo().search([('id', '=', self._get_delivery_order().partner_id.id)], limit=1)
+
+    def _get_cod(self):
+        return self._get_delivery_order().sale_id.amount_total if self._get_delivery_order().sale_id.payment_method == 'cod' else 0
 
     name = fields.Char(string='Name', readonly=True)
     delivery_boy_id = fields.Many2one('res.partner', 'Delivery Boy', required=True)
@@ -24,7 +27,30 @@ class BookingDeliveryBoysWizard(models.TransientModel):
     currency_id = fields.Many2one('res.currency', string='Currency', default=lambda self: self.env.company.currency_id)
     delivery_order_id = fields.Many2one('stock.picking', string='Delivery order', default=_get_delivery_order, required=True, readonly=True)
     fee_ship = fields.Monetary(string='Fee ship', currency_field='currency_id')
-    cod = fields.Monetary(string='COD', currency_field='currency_id')
+    cod = fields.Monetary(string='COD', default=_get_cod, currency_field='currency_id')
+
+    @api.onchange('cod')
+    def _onchange_cod(self):
+        if self.delivery_order_id.sale_id.payment_method == 'cod' and self.delivery_order_id.sale_id.amount_total < self.cod:
+            raise UserError(_("COD invalid!"))
+        elif self.delivery_order_id.sale_id.payment_method == 'online' and self.cod > 0:
+            raise UserError(_('COD invalid!'))
 
     def action_booking_delivery_boys(self):
-        pass
+        delivery_boys_model = self.env['delivery.boys'].sudo()
+        try:
+            data = {
+                'deli_boy_id': self.delivery_boy_id.id,
+                'partner_id': self.receiver_id.id,
+                'deli_order_id': self.delivery_order_id.id,
+                'fee_ship': self.fee_ship,
+                'cod': self.cod,
+            }
+            self.delivery_order_id.write({
+                'is_allotted': True
+            })
+            print('dataa = ', data)
+            delivery_boys_model.create(data)
+        except Exception as error:
+            raise ValueError(_("Something went wrong when create data!\n Error: %s" % str(error)))
+        return True
