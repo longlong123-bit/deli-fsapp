@@ -4,7 +4,7 @@ from odoo.addons.delivery_viettelpost.models.viettelpost_request import ViettelP
 
 class BookingViettelpostWizard(models.TransientModel):
     _name = 'booking.viettelpost.wizard'
-    _description = 'This module fills and confirms infor about shipment before creating a bill of lading Viettelpost.'
+    _description = 'This module fills and confirms info about shipment before creating a bill of lading Viettelpost.'
 
     @staticmethod
     def get_viettelpost_service_types():

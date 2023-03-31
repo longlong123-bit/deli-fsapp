@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="booking_delivery_boys_wizard_form_view" model="ir.ui.view">
+        <field name="name">booking.delivery.boys.wizard.view</field>
+        <field name="model">booking.delivery.boys.wizard</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+<!--                        <label for="delivery_boy_id" string="Shipper Infomation"/>-->
+                        <group name="shipper_info">
+                            <field name="delivery_boy_id"/>
+                            <field name="delivery_boy_phone"/>
+                        </group>
+<!--                        <label for="customer_id" string="Receiver Infomation"/>-->
+                        <group name="receiver_info">
+                            <field name="receiver_id"/>
+                            <span class="o_form_label o_td_label" name="address_name">
+                                <b>Address</b>
+                            </span>
+                            <div class="o_address_format">
+                                <field name="street" placeholder="Street..." class="o_address_street"/>
+                                <field name="street2" placeholder="Street 2..." class="o_address_street"/>
+                                <field name="city_id" placeholder="City" class="o_address_city"/>
+                            </div>
+                            <field name="receiver_phone"/>
+                        </group>
+<!--                        <label for="delivery_order_id" string="Fee Infomation"/>-->
+                        <group name="fee_info">
+                            <field name="delivery_order_id" force_save="1"/>
+                            <field name="cod"/>
+                            <field name="fee_ship"/>
+                        </group>
+                        <group name="warehouse_info">
+                        </group>
+                    </group>
+                </sheet>
+<!--                <group>-->
+<!--                    <field name="deli_order_id" force_save="1"/>-->
+<!--                </group>-->
+                <footer>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    <button string="Booking" type="object" name="action_booking_delivery_boys" class="btn btn-primary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="booking_delivery_boys_wizard_action" model="ir.actions.act_window">
+        <field name="name">Booking Delivery Boys</field>
+        <field name="res_model">booking.delivery.boys.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

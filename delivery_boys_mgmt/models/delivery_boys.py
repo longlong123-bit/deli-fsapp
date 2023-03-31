@@ -11,7 +11,7 @@ class DeliveryBoys(models.Model):
     deli_phone = fields.Char(related='partner_id.phone', string='Phone')
     deli_order_id = fields.Many2one('stock.picking', 'Delivery Order', required=True, tracking=True)
     sale_id = fields.Many2one('sale.order', related='deli_order_id.sale_id', string='Sale order')
-    partner_id = fields.Many2one('res.partner', 'Delivery Boy', required=True, tracking=True)
+    partner_id = fields.Many2one('res.partner', 'Receiver', required=True, tracking=True)
     street = fields.Char(related='partner_id.street', string='Street')
     street2 = fields.Char(related='partner_id.street2', string='Street 2')
     ward_id = fields.Many2one('res.ward', related='partner_id.ward_id', string='Ward')
@@ -27,7 +27,7 @@ class DeliveryBoys(models.Model):
         ('inprocess', 'In-process'),
         ('completed', 'Completed'),
         ('cancel', 'Cancel'),
-    ])
+    ], default='new')
     num_of_package = fields.Integer(string='Number of package', tracking=True)
     cus_receivable = fields.Monetary(string='Customer\'s Receivable', currency_field='currency_id', tracking=True)
     note = fields.Text(string='Note')
