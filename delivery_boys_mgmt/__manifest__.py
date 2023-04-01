@@ -12,7 +12,8 @@
         'security/ir.model.access.csv',
         'data/sequence.xml',
         'views/delivery_boys_views.xml',
-        'views/menus.xml'
+        'wizard/complete_delivery_wizard.xml',
+        'views/menus.xml',
     ],
     'application': True
 }

@@ -7,7 +7,7 @@
             <form string="Delivery boy" create="0">
                 <header>
                     <button name="action_confirm" type="object" class="btn btn-primary" string="Confirm" attrs="{'invisible': [('state', '!=', 'new')]}"/>
-                    <button name="action_done" type="object" class="btn btn-primary" string="Done"/>
+                    <button name="action_done" type="object" class="btn btn-primary" string="Done" attrs="{'invisible': [('state', 'in', ['new', 'completed', 'cancel'])]}"/>
                     <button name="action_refuse" type="object" class="btn btn-primary" string="Refuse"/>
                     <button name="action_cancel" type="object" class="btn" string="Cancel"/>
                     <field name="state" widget="statusbar"/>
