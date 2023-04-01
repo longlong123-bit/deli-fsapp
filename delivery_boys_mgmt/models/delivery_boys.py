@@ -74,4 +74,15 @@ class DeliveryBoys(models.Model):
         })
 
     def action_cancel(self):
-        ...
+        return {
+            'name': _('Cancel delivery'),
+            'view_mode': 'form',
+            'view_type': 'form',
+            'view_id': self.env.ref('delivery_boys_mgmt.cancel_delivery_wizard_form_view').id,
+            'res_model': 'cancel.delivery.wizard',
+            'context': {
+                'delivery_order_id': self.deli_order_id.id,
+            },
+            'type': 'ir.actions.act_window',
+            'target': 'new'
+        }
