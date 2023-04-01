@@ -12,7 +12,7 @@ class BookingDeliveryBoysWizard(models.TransientModel):
         return self.env['res.partner'].sudo().search([('id', '=', self._get_delivery_order().partner_id.id)], limit=1)
 
     def _get_cod(self):
-        return self._get_delivery_order().sale_id.amount_total if self._get_delivery_order().sale_id.payment_method == 'cod' else 0
+        return self._get_delivery_order().sale_id.amount_due if self._get_delivery_order().sale_id.payment_method == 'cod' else 0
 
     name = fields.Char(string='Name', readonly=True)
     delivery_boy_id = fields.Many2one('res.partner', 'Delivery Boy', required=True)
@@ -39,18 +39,14 @@ class BookingDeliveryBoysWizard(models.TransientModel):
     def action_booking_delivery_boys(self):
         delivery_boys_model = self.env['delivery.boys'].sudo()
         try:
-            data = {
+            delivery_boys_model.create({
                 'deli_boy_id': self.delivery_boy_id.id,
                 'partner_id': self.receiver_id.id,
                 'deli_order_id': self.delivery_order_id.id,
+                'num_of_package': 1,
                 'fee_ship': self.fee_ship,
                 'cod': self.cod,
-            }
-            self.delivery_order_id.write({
-                'is_allotted': True
             })
-            print('dataa = ', data)
-            delivery_boys_model.create(data)
         except Exception as error:
             raise ValueError(_("Something went wrong when create data!\n Error: %s" % str(error)))
         return True
