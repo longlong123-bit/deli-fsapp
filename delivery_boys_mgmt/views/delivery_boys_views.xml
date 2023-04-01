@@ -6,7 +6,7 @@
         <field name="arch" type="xml">
             <form string="Delivery boy" create="0">
                 <header>
-                    <button name="action_confirm" type="object" class="btn btn-primary" string="Confirm"/>
+                    <button name="action_confirm" type="object" class="btn btn-primary" string="Confirm" attrs="{'invisible': [('state', '!=', 'new')]}"/>
                     <button name="action_done" type="object" class="btn btn-primary" string="Done"/>
                     <button name="action_refuse" type="object" class="btn btn-primary" string="Refuse"/>
                     <button name="action_cancel" type="object" class="btn" string="Cancel"/>
@@ -20,7 +20,7 @@
                     </div>
                     <group>
                         <group string="Shipment information">
-                            <field name="deli_boy_id"/>
+                            <field name="deli_boy_id" attrs="{'required': [('state', '=', 'new')], 'readonly': [('state', '!=', 'new')]}"/>
                             <field name="deli_phone"/>
                             <field name="deli_order_id"/>
                             <field name="sale_id"/>
@@ -30,7 +30,7 @@
                             <field name="cus_receivable"/>
                         </group>
                         <group string="Customer information">
-                            <field name="partner_id"/>
+                            <field name="partner_id" attrs="{'readonly': [('state', '!=', 'new')]}"/>
                             <field name="partner_phone"/>
                             <field name="street"/>
                             <field name="street2"/>
