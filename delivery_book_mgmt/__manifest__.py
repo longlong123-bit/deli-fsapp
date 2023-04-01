@@ -7,7 +7,7 @@
     'support': 'odoo.tangerine@gmail.com',
     'author': 'Tangerine',
     'license': 'LGPL-3',
-    'depends': ['base', 'mail', 'viettelpost_address', 'contacts', 'stock', 'sale'],
+    'depends': ['base', 'mail', 'viettelpost_address', 'contacts', 'stock', 'sale', 'delivery', 'delivery_viettelpost'],
     'data': [
         'security/ir.model.access.csv',
         'views/delivery_book_views.xml',
