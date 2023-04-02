@@ -58,7 +58,7 @@ def validate_token(func):
 class WebhookDeliController(Controller):
 
     @validate_token
-    @route("/api/v1/pickings", type="http", auth="none", methods=["GET"], csrf=False)
+    @route("/api/v1/viettelpost", type="http", auth="none", methods=["GET"], csrf=False)
     def _get_pickings(self, **payload):
         try:
             response = {"pickings": []}

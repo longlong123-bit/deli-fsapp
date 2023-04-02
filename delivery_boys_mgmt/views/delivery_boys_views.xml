@@ -14,38 +14,55 @@
                 </header>
                 <sheet>
                     <div class="oe_title">
-                        <h1>
-                            <field name="name" force_save="1"/>
-                        </h1>
+                        <div class="oe_title">
+                            <h1><field name="deli_order_id" force_save="1"/></h1>
+                            <h4><field name="sale_id"/></h4>
+                        </div>
                     </div>
                     <group>
-                        <group string="Shipment information">
-                            <field name="deli_boy_id" attrs="{'required': [('state', '=', 'new')], 'readonly': [('state', '!=', 'new')]}"/>
-                            <field name="deli_phone"/>
+                        <group>
+                            <field name="name"/>
+                            <field name="warehouse_id"/>
+                            <field name="deli_boy_id"/>
+                            <field name="deli_phone" widget="phone"/>
+                            <label for="deli_street" string="Address"/>
+                            <div class="o_address_format">
+                                <field name="deli_street" class="o_address_street" placeholder="Street"/>
+                                <field name="deli_ward_id" class="o_address_city" placeholder="Ward" options="{'no_create': True, 'no_open': True}"/>
+                                <field name="deli_district_id" class="o_address_state" placeholder="District" options="{'no_create': True, 'no_open': True}"/>
+                                <field name="deli_province_id" class="o_address_zip" placeholder="City" options="{'no_create': True, 'no_open': True}"/>
+                            </div>
                             <field name="deli_order_id"/>
                             <field name="sale_id"/>
                             <field name="fee_ship"/>
                             <field name="cod"/>
                             <field name="num_of_package"/>
-                            <field name="cus_receivable"/>
                         </group>
-                        <group string="Customer information">
-                            <field name="partner_id" attrs="{'readonly': [('state', '!=', 'new')]}"/>
-                            <field name="partner_phone"/>
-                            <field name="street"/>
-                            <field name="street2"/>
-                            <field name="ward_id"/>
-                            <field name="district_id"/>
-                            <field name="city_id"/>
+                        <group>
+                            <field name="partner_id"/>
+                            <field name="partner_phone" widget="phone"/>
+                            <label for="street" string="Address"/>
+                            <div class="o_address_format">
+                                <field name="street" class="o_address_street" placeholder="Street"/>
+                                <field name="ward_id" class="o_address_city" placeholder="Ward" options="{'no_create': True, 'no_open': True}"/>
+                                <field name="district_id" class="o_address_state" placeholder="District" options="{'no_create': True, 'no_open': True}"/>
+                                <field name="city_id" class="o_address_zip" placeholder="City" options="{'no_create': True, 'no_open': True}"/>
+                            </div>
+                            <field name="cus_receivable"/>
+                            <label for="est_deli_time" string="Estimate Deli"/>
+                            <div class="o_row">
+                                <field name="est_deli_time" class="oe_inline"/>
+                                <span><field name="hours_uom_name"/></span>
+                            </div>
+                            <label for="weight" string="Weight"/>
+                            <div class="o_row">
+                                <field name="weight" class="oe_inline"/>
+                                <span><field name="gram_uom_name"/></span>
+                            </div>
+                            <field name="note"/>
+                            <field name="cancel_reason" attrs="{'invisible': [('state', '!=', 'cancel')]}"/>
                         </group>
                     </group>
-                    <notebook>
-                        <page string="Note">
-                            <group>
-                                <field name="note"/>
-                            </group>
-                        </page>
-                    </notebook>
                 </sheet>
                 <div class="oe_chatter">
                      <field name="message_follower_ids" widget="mail_followers"/>
@@ -59,15 +76,17 @@
         <field name="name">delivery.boys.tree.view</field>
         <field name="model">delivery.boys</field>
         <field name="arch" type="xml">
-            <tree>
+            <tree decoration-muted="state == 'cancel'" decoration-success="state == 'done'">
+                <field name="create_date"/>
+                <field name="deli_order_id"/>
                 <field name="name"/>
                 <field name="deli_boy_id"/>
                 <field name="partner_id"/>
-                <field name="deli_order_id"/>
                 <field name="fee_ship"/>
                 <field name="cod"/>
                 <field name="num_of_package"/>
                 <field name="cus_receivable"/>
+                <field name="state"/>
             </tree>
         </field>
     </record>
@@ -99,5 +118,4 @@
             </p>
         </field>
     </record>
-
 </odoo>

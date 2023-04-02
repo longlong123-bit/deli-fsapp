@@ -1,16 +1,12 @@
 import requests
 from datetime import datetime
-from typing import Dict, Any, List, Tuple, Sequence
+from typing import Dict, Any, List
 from odoo import models, fields, api, _
-from odoo.exceptions import ValidationError
-from odoo.addons.delivery_viettelpost.models.viettelpost_request import ViettelPostRequest
+from odoo.tools import ustr
+from odoo.exceptions import ValidationError, UserError
 from odoo.addons.stock_extend.dataclass.delivery_dataclasses import ViettelpostDataclass
 from odoo.addons.delivery_book_mgmt.models.delivery_book import DeliveryBook
-
-# class ViettelPostRequestInstance(ViettelPostRequest):
-#     def book_ship(self, **kwargs):
-#         client = self._set_client()
-#         requests.post(url=self.endurl, json=kwargs, headers=headers, timeout=300)
+from odoo.addons.stock_extend.api.client import Client
 
 
 class BookingViettelpostWizard(models.TransientModel):
@@ -50,33 +46,6 @@ class BookingViettelpostWizard(models.TransientModel):
     currency_id = fields.Many2one('res.currency', string='Currency', default=lambda self: self.env.company.currency_id)
     cod = fields.Monetary(string='COD', currency_field='currency_id')
     weight = fields.Float(string='Weight')
-
-    @api.onchange('deli_order_id')
-    def _onchange_deli_order_id(self):
-        for rec in self:
-            if rec.deli_order_id:
-                rec.cod = rec.deli_order_id.sale_id.amount_due
-                rec.sender_id = rec.deli_order_id.picking_type_id.warehouse_id.id
-
-    @api.onchange('sender_id')
-    def _onchange_sender_id(self):
-        for rec in self:
-            if rec.sender_id:
-                rec.sender_phone = rec.sender_id.partner_id.phone
-                rec.sender_street = rec.sender_id.partner_id.street
-                rec.sender_ward_id = rec.sender_id.partner_id.ward_id.id
-                rec.sender_district_id = rec.sender_id.partner_id.district_id.id
-                rec.sender_province_id = rec.sender_id.partner_id.city_id.id
-
-    @api.onchange('receiver_id')
-    def _onchange_receiver_id(self):
-        for rec in self:
-            if rec.receiver_id:
-                rec.receiver_phone = rec.receiver_id.phone
-                rec.receiver_street = rec.receiver_id.street
-                rec.receiver_ward_id = rec.receiver_id.ward_id.id
-                rec.receiver_district_id = rec.receiver_id.district_id.id
-                rec.receiver_province_id = rec.receiver_id.city_id.id
 
     def _get_address_sender(self) -> str:
         street = self.sender_street or ''
@@ -200,51 +169,73 @@ class BookingViettelpostWizard(models.TransientModel):
             'cod': dataclass.money_collection,
             'weight': dataclass.exchange_weight,
             'est_deli_time': dataclass.kpi_ht,
-            'tracking_link': f'https://viettelpost.vn/thong-tin-don-hang?peopleTracking=sender&orderNumber=17706321127',
+            'tracking_link': f'https://viettelpost.vn/thong-tin-don-hang?peopleTracking=sender&orderNumber={dataclass.bl_code}',
             'state': 'Giao cho buu ta di nhan',
         }
         return payload
 
-    def action_booking_viettelpost(self):
-        self._validate_payload()
-        payload = {
-            'ORDER_NUMBER': self.deli_order_id.name,
-            'GROUPADDRESS_ID': self.store_id.group_address_id,
-            'CUS_ID': self.store_id.customer_id,
-            'DELIVERY_DATE': datetime.now().strftime('%d/%m/%Y %H:%M:%S'),
-            'PRODUCT_NAME': self.product_name,
-            'PRODUCT_QUANTITY': self.no_of_package,
-            'PRODUCT_PRICE': self.deli_order_id.sale_id.amount_total,
-            'PRODUCT_WEIGHT': self.weight,
-            'ORDER_NOTE': self.note,
-            'MONEY_COLLECTION': self.cod,
-            'PRODUCT_TYPE': self.product_type,
-            'ORDER_PAYMENT': int(self.order_payment),
-            'ORDER_SERVICE': self.service_type
-        }
-        sender = self._get_sender()
-        receiver = self._get_receiver()
-        lst_item = self._get_list_item()
-        payload = {**payload, **sender, **receiver, **lst_item}
-        if self.check_unique:
-            payload = {**payload, **{'CHECK_UNIQUE': True}}
-        result = {
-                "ORDER_NUMBER": "17706321127",
-                "MONEY_COLLECTION": 0,
-                "EXCHANGE_WEIGHT": 50,
-                "MONEY_TOTAL": 11000,
-                "MONEY_TOTAL_FEE": 10000,
-                "MONEY_FEE": 0,
-                "MONEY_COLLECTION_FEE": 0,
-                "MONEY_OTHER_FEE": 0,
-                "MONEY_VAS": 0,
-                "MONEY_VAT": 1000,
-                "KPI_HT": 24.0,
-                "RECEIVER_PROVINCE": 2,
-                "RECEIVER_DISTRICT": 35,
-                "RECEIVER_WARDS": 672
-            }
-        dataclass_vtp = ViettelpostDataclass(*ViettelpostDataclass.load_data(result))
-        delivery_book_payload = self._get_delivery_book_payload(dataclass_vtp)
-        self.env['delivery.book'].sudo().create(delivery_book_payload)
+    def _get_client_viettelpost(self) -> Client:
+        base_url = 'https://partner.viettelpost.vn'
+        if not base_url:
+            raise UserError(_('Web base url not found.'))
+        if not self.deli_carrier_id.viettelpost_token:
+            raise UserError(_('Viettelpost token not found.'))
+        client = Client(base_url, self.deli_carrier_id.viettelpost_token)
+        return client
 
+    def _prepare_data_create_line_amount_ship_fee(self, dataclass: ViettelpostDataclass):
+        service_name = [item[1] for item in DeliveryBook.get_viettelpost_service_types() if item[0] == self.service_type]
+        payload: dict = {
+            'product_id': self.deli_carrier_id.product_id.id,
+            'name': f'[{self.service_type}] - {service_name[0]}',
+            'product_uom_qty': 1.0,
+            'price_unit': dataclass.money_total,
+            'price_subtotal': dataclass.money_total,
+            'price_total': dataclass.money_total,
+            'sequence': self.deli_order_id.sale_id.order_line[-1].sequence + 1,
+            'order_id': self.deli_order_id.sale_id.order_line[-1].order_id.id,
+            'is_delivery': True
+        }
+        return payload
+
+    def action_booking_viettelpost(self):
+        try:
+            self._validate_payload()
+            payload = {
+                'ORDER_NUMBER': self.deli_order_id.name,
+                'GROUPADDRESS_ID': self.store_id.group_address_id,
+                'CUS_ID': self.store_id.customer_id,
+                'DELIVERY_DATE': datetime.now().strftime('%d/%m/%Y %H:%M:%S'),
+                'PRODUCT_NAME': self.product_name,
+                'PRODUCT_QUANTITY': self.no_of_package,
+                'PRODUCT_PRICE': self.deli_order_id.sale_id.amount_total,
+                'PRODUCT_WEIGHT': self.weight,
+                'ORDER_NOTE': self.note,
+                'MONEY_COLLECTION': self.cod,
+                'PRODUCT_TYPE': self.product_type,
+                'ORDER_PAYMENT': int(self.order_payment),
+                'ORDER_SERVICE': self.service_type
+            }
+            sender = self._get_sender()
+            receiver = self._get_receiver()
+            lst_item = self._get_list_item()
+            payload = {**payload, **sender, **receiver, **lst_item}
+            if self.check_unique:
+                payload = {**payload, **{'CHECK_UNIQUE': True}}
+            client = self._get_client_viettelpost()
+            result = client.create_order(payload)
+            dataclass_vtp = ViettelpostDataclass(*ViettelpostDataclass.load_data(result))
+            delivery_book_payload = self._get_delivery_book_payload(dataclass_vtp)
+            delivery_book_id = self.env['delivery.book'].sudo().create(delivery_book_payload)
+            line_data_ship_fee = self._prepare_data_create_line_amount_ship_fee(dataclass_vtp)
+            self.env['sale.order.line'].create(line_data_ship_fee)
+            return {
+                'type': 'ir.actions.act_window',
+                'name': 'Delivery Book',
+                'res_model': 'delivery.book',
+                'view_mode': 'form',
+                'res_id': delivery_book_id.id,
+                'target': 'current',
+            }
+        except Exception as e:
+            raise UserError(_(ustr(e)))

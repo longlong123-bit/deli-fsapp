@@ -11,6 +11,7 @@
     'data': [
         'security/ir.model.access.csv',
         'data/sequence.xml',
+        'wizard/cancel_delivery_boys_wizard_views.xml',
         'views/delivery_boys_views.xml',
         'views/menus.xml'
     ],

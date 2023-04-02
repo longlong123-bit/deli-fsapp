@@ -38,32 +38,6 @@ class DeliveryBook(models.Model):
             ('V510', 'Dịch vụ 5+ gói 1000g'),
             ('V520', 'Dịch vụ 5+ gói 2000g'),
             ('PTTT', 'Phân tích thị trường'),
-            ('V510', 'Dịch vụ 5+ gói 1000g'),
-            ('V02', 'TMDT Phát nhanh 2h'),
-            ('V520', 'Dịch vụ 5+ gói 2000g'),
-            ('VCBO', 'Chuyển phát đường bộ'),
-            ('VCBA', 'Chuyển phát đường bay'),
-            ('LSTD', 'Hàng nặng nhanh'),
-            ('V505', 'Dịch vụ 5+ gói 500g'),
-            ('PTTT', 'Phân tích thị trường'),
-            ('NCOD', 'Chuyển phát nhanh'),
-            ('SCOD', 'SCOD Giao hàng thu tiền'),
-            ('PTN', 'Nội tỉnh nhanh'),
-            ('V30', 'V30'),
-            ('V25', 'V25'),
-            ('PHS', 'Nội tỉnh tiết kiệm'),
-            ('V20', 'V20'),
-            ('V35', 'V35'),
-            ('VCN', 'Tài liệu nhanh'),
-            ('V24', 'Đồng giá 24K'),
-            ('LECO', 'Hàng nặng tiết kiệm'),
-            ('VTK', 'Tài liệu tiết kiệm'),
-            ('V60', 'V60 Dịch vụ Nhanh 60h'),
-            ('VHT', 'Hỏa tốc, hẹn giờ'),
-            ('VBS', 'VBS Nhanh theo hộp'),
-            ('VBE', 'VBE Tiết kiệm theo hộp'),
-            ('LCOD', 'Chuyển phát tiêu chuẩn'),
-            ('ECOD', 'ECOD Giao hành thu tiền tiết kiệm'),
             ('DHC', 'DHL Chuyển phát quốc tế'),
             ('UPS', 'UPS quốc tế chỉ định'),
             ('VQN', 'VQN Quốc tế nhanh'),
@@ -87,19 +61,17 @@ class DeliveryBook(models.Model):
     def viettelpost_national_types() -> List[Tuple]:
         return [('1', 'Inland'), ('0', 'International')]
 
-    carrier_id = fields.Many2one('delivery.carrier', string='Shipping method', required=True, tracking=True)
+    carrier_id = fields.Many2one('delivery.carrier', string='Shipping Method', required=True, tracking=True)
     carrier_type = fields.Selection(related='carrier_id.delivery_type')
     currency_id = fields.Many2one('res.currency', string='Currency', default=lambda self: self.env.company.currency_id)
-    # fields for viettelpost
     service_type = fields.Selection(
-        selection=lambda self: DeliveryBook.get_viettelpost_service_types(),
-        string='Service Type', default='VCN', required=True)
+        selection=lambda self: DeliveryBook.get_viettelpost_service_types(), string='Service Type', default='VCN')
     order_payment = fields.Selection(selection=lambda self: DeliveryBook.viettelpost_order_payments(),
-                                     string='Order Payment', default='1', required=True)
+                                     string='Order Payment', default='1')
     product_type = fields.Selection(selection=lambda self: DeliveryBook.viettelpost_product_types(),
-                                    string='Product Type', default='HH', required=True)
+                                    string='Product Type', default='HH')
     national_type = fields.Selection(selection=lambda self: DeliveryBook.viettelpost_national_types(),
-                                     string='National Type', default='1', required=True)
+                                     string='National Type', default='1')
 
     receiver_id = fields.Many2one('res.partner', string='Receiver', required=True)
     receiver_phone = fields.Char(string='Phone', required=True)
@@ -110,13 +82,13 @@ class DeliveryBook(models.Model):
 
     sender_id = fields.Many2one('stock.warehouse', string='Sender', required=True)
     sender_phone = fields.Char(string='Phone', required=True)
-    sender_street = fields.Char(string='Address', required=True)
-    sender_ward_id = fields.Many2one('res.ward', string='Ward', required=True)
-    sender_district_id = fields.Many2one('res.district', string='District', required=True)
-    sender_province_id = fields.Many2one('res.city', string='Province', required=True)
-
-    store_id = fields.Many2one('viettelpost.store', string='Store', required=True)
-
+    sender_street = fields.Char(string='Address')
+    sender_ward_id = fields.Many2one('res.ward', string='Ward')
+    sender_district_id = fields.Many2one('res.district', string='District')
+    sender_province_id = fields.Many2one('res.city', string='Province')
+    deli_boy_id = fields.Many2one('res.partner', string='Deli Boy')
+    store_id = fields.Many2one('viettelpost.store', string='Store')
+    cus_receivable = fields.Monetary(string='Cus\'s Receivable', currency_field='currency_id')
     deli_order_id = fields.Many2one('stock.picking', string='Delivery order', required=True, tracking=True)
     sale_id = fields.Many2one(related='deli_order_id.sale_id', string='Sale order')
     note = fields.Text(string='Note')
@@ -127,7 +99,7 @@ class DeliveryBook(models.Model):
     weight = fields.Float(string='Weight')
     state = fields.Char(string='State', required=True, tracking=True, readonly=True)
     est_deli_time = fields.Float(string='Est Delivery Time')
-    tracking_link = fields.Char(string='Tracking link')
+    tracking_link = fields.Char(string='Tracking link', required=True)
     money_total = fields.Monetary(string='Money total', readonly=True, currency_field='currency_id')
     money_fee = fields.Monetary(string='Money fee', readonly=True, currency_field='currency_id')
     money_collection_fee = fields.Monetary(string='Money collection fee', readonly=True,

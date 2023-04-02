@@ -13,7 +13,7 @@
                 <group>
                     <group>
                         <field name="sender_id" options="{'no_create_edit': True, 'no_open': True}"/>
-                        <field name="sender_phone"/>
+                        <field name="sender_phone" widget="phone"/>
                         <label for="sender_street" string="Address"/>
                         <div class="o_address_format">
                             <field name="sender_street" class="o_address_street" placeholder="Street"/>
@@ -31,7 +31,7 @@
                     </group>
                     <group>
                         <field name="receiver_id" options="{'no_create_edit': True, 'no_open': True}"/>
-                        <field name="receiver_phone"/>
+                        <field name="receiver_phone" widget="phone"/>
                         <label for="receiver_street" string="Address"/>
                         <div class="o_address_format">
                             <field name="receiver_street" class="o_address_street" placeholder="Street"/>
