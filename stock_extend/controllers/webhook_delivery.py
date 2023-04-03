@@ -44,9 +44,9 @@ def validate_token(func):
     def wrap(self, *args, **kwargs):
         authorization = request.httprequest.headers.get("Authorization")
         if not authorization:
-            return invalid_response("access_token_not_found", "Missing access_token in request header", 401)
+            return invalid_response("access_token_not_found", "Missing Authorization in request header", 401)
         token = request.env['res.partner'].sudo().search([('authorization', "=", authorization)], limit=1)
-        if token.find_one_or_create_token(user_id=token.user_id.id) != authorization:
+        if token.find_one_or_create_token(partner_id=token.id) != authorization:
             return invalid_response("access_token", "Token seems to have expired or invalid", 401)
 
         request.session.uid = token.user_id.id
@@ -71,3 +71,22 @@ class WebhookDeliController(Controller):
             return response
         except AccessError as e:
             return invalid_response("Access error", "Error: %s" % e.name)
+
+    @validate_token
+    @route('/api/v1/update_delivery_carrier', type='http', auth='none', methods=["POST"], csrf=False)
+    def _update_delivery_carrier(self, **payload):
+        try:
+            payload = json.loads(payload['DATA'])
+            sale_order = request.env['sale.order'].sudo().search([('name', '=', payload['ORDER_NUMBER'])], limit=1)
+            if not sale_order:
+                return invalid_response("Error", "Cannot find sale order!")
+            delivery_book = request.env['delivery.book'].sudo().search([('sale_id', '=', sale_order.id)], limit=1)
+            if not delivery_book:
+                return invalid_response("Error", "Cannot find Delivery Carrier for VTP!")
+            delivery_book.write({
+                'state': payload['STATUS_NAME'],
+                'note': payload['NOTE'],
+            })
+            return valid_response(payload, "Successfully!", 200)
+        except Exception as error:
+            return invalid_response("Update delivery carrier failed", "Error: %s" % error)
