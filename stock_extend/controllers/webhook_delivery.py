@@ -46,9 +46,11 @@ def validate_token(func):
         if 'vtp' in path:
             authorization = request.httprequest.headers.get("Authorization")
             partner_code = 'VTP'
-        else:
+        elif 'ahamove' in path:
             authorization = request.httprequest.headers.get("apikey")
             partner_code = 'AHAMOVE'
+        else:
+            return invalid_response("path_error", "path is not formatted", 401)
         if not authorization:
             return invalid_response("access_token_not_found", "Missing Authorization in request header", 401)
         token = request.env['res.partner'].sudo().search([('partner_code', '=', partner_code), ('authorization', "=", authorization)], limit=1)
@@ -70,10 +72,7 @@ class WebhookDeliController(Controller):
             payload = request.jsonrequest
             if not payload:
                 return invalid_response("Error", "No data!")
-            sale_order = request.env['sale.order'].sudo().search([('name', '=', payload['ORDER_NUMBER'])], limit=1)
-            if not sale_order:
-                return invalid_response("Error", "Cannot find sale order!")
-            delivery_book = request.env['delivery.book'].sudo().search([('sale_id', '=', sale_order.id)], limit=1)
+            delivery_book = request.env['delivery.book'].sudo().search([('bl_code', '=', payload['ORDER_NUMBER'])], limit=1)
             if not delivery_book:
                 return invalid_response("Error", "Cannot find Delivery Carrier for VTP!")
             delivery_book.write({

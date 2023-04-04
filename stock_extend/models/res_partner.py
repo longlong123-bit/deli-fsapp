@@ -13,14 +13,7 @@ class ResPartner(models.Model):
 
     authorization = fields.Char(string='Authorization', help='Authorization of delivery carrier', tracking=True)
     partner_code = fields.Char(string='Code', tracking=True)
-    type = fields.Selection(
-        [('contact', 'Contact'),
-         ('invoice', 'Invoice Address'),
-         ('delivery', 'Delivery Address'),
-         ('other', 'Other Address'),
-         ("private", "Private Address"),
-         ("delivery_carrier", "Delivery Carrier"),
-         ])
+    type = fields.Selection(selection_add=[("delivery_carrier", "Delivery Carrier")])
 
     def get_access_token(self):
         if not self.authorization:
