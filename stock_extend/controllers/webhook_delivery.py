@@ -42,10 +42,16 @@ def invalid_response(typ, message=None, status=401):
 def validate_token(func):
     @functools.wraps(func)
     def wrap(self, *args, **kwargs):
-        authorization = request.httprequest.headers.get("Authorization")
+        path = request.httprequest.path
+        if 'vtp' in path:
+            authorization = request.httprequest.headers.get("Authorization")
+            partner_code = 'VTP'
+        else:
+            authorization = request.httprequest.headers.get("apikey")
+            partner_code = 'AHAMOVE'
         if not authorization:
             return invalid_response("access_token_not_found", "Missing Authorization in request header", 401)
-        token = request.env['res.partner'].sudo().search([('authorization', "=", authorization)], limit=1)
+        token = request.env['res.partner'].sudo().search([('partner_code', '=', partner_code), ('authorization', "=", authorization)], limit=1)
         if token.find_one_or_create_token(partner_id=token.id) != authorization:
             return invalid_response("access_token", "Token seems to have expired or invalid", 401)
 
@@ -58,25 +64,10 @@ def validate_token(func):
 class WebhookDeliController(Controller):
 
     @validate_token
-    @route("/api/v1/pickings", type="http", auth="none", methods=["GET"], csrf=False)
-    def _get_pickings(self, **payload):
+    @route('/api/v1/update_delivery_carrier_vtp', type='json', auth='none', methods=["POST"], csrf=False)
+    def _update_delivery_carrier_viettel_post(self, **payload):
         try:
-            response = {"pickings": []}
-            pickings = request.env['stock.picking'].search([], limit=10)
-            for pck in pickings:
-                data = {"picking_id": pck.id,
-                        "name": pck.name
-                        }
-                response["pickings"].append(data)
-            return response
-        except AccessError as e:
-            return invalid_response("Access error", "Error: %s" % e.name)
-
-    @validate_token
-    @route('/api/v1/update_delivery_carrier', type='http', auth='none', methods=["POST"], csrf=False)
-    def _update_delivery_carrier(self, **payload):
-        try:
-            payload = json.loads(payload['DATA'])
+            payload = request.jsonrequest
             sale_order = request.env['sale.order'].sudo().search([('name', '=', payload['ORDER_NUMBER'])], limit=1)
             if not sale_order:
                 return invalid_response("Error", "Cannot find sale order!")
@@ -85,8 +76,22 @@ class WebhookDeliController(Controller):
                 return invalid_response("Error", "Cannot find Delivery Carrier for VTP!")
             delivery_book.write({
                 'state': payload['STATUS_NAME'],
-                'note': payload['NOTE'],
             })
             return valid_response(payload, "Successfully!", 200)
         except Exception as error:
-            return invalid_response("Update delivery carrier failed", "Error: %s" % error)
+            return invalid_response("Update delivery carrier viettel post failed", "Error: %s" % error)
+
+    @validate_token
+    @route('/api/v1/update_delivery_carrier_ahamove', type='json', auth='none', methods=["POST"], csrf=False)
+    def _update_delivery_carrier_ahamove(self, **payload):
+        try:
+            payload = request.jsonrequest
+            delivery_book = request.env['delivery.book'].sudo().search([('bl_code', '=', payload.get('_id'))], limit=1)
+            if not delivery_book:
+                return invalid_response("Error", "Cannot find Delivery Carrier for Ahamove")
+            delivery_book.write({
+                'state': payload['status'],
+            })
+            return valid_response(payload, "Successfully!", 200)
+        except Exception as error:
+            return invalid_response("Update delivery carrier ahamove failed", "Error: %s" % error)

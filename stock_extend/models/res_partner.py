@@ -12,6 +12,7 @@ class ResPartner(models.Model):
     _inherit = 'res.partner'
 
     authorization = fields.Char(string='Authorization', help='Authorization of delivery carrier', tracking=True)
+    partner_code = fields.Char(string='Code', tracking=True)
     type = fields.Selection(
         [('contact', 'Contact'),
          ('invoice', 'Invoice Address'),

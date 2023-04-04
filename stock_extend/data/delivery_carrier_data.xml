@@ -37,7 +37,7 @@
         </record>
 
         <record id="delivey_carrier_viettelpost_contact" model="res.partner">
-            <field name="name">Viettel Post</field>
+            <field name="name">Viettel Post Service</field>
             <field name="company_type">person</field>
             <field name="type">delivery_carrier</field>
         </record>
