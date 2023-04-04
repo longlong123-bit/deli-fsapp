@@ -68,6 +68,8 @@ class WebhookDeliController(Controller):
     def _update_delivery_carrier_viettel_post(self, **payload):
         try:
             payload = request.jsonrequest
+            if not payload:
+                return invalid_response("Error", "No data!")
             sale_order = request.env['sale.order'].sudo().search([('name', '=', payload['ORDER_NUMBER'])], limit=1)
             if not sale_order:
                 return invalid_response("Error", "Cannot find sale order!")
@@ -86,6 +88,8 @@ class WebhookDeliController(Controller):
     def _update_delivery_carrier_ahamove(self, **payload):
         try:
             payload = request.jsonrequest
+            if not payload:
+                return invalid_response("Error", "No data!")
             delivery_book = request.env['delivery.book'].sudo().search([('bl_code', '=', payload.get('_id'))], limit=1)
             if not delivery_book:
                 return invalid_response("Error", "Cannot find Delivery Carrier for Ahamove")
