@@ -1,4 +1,4 @@
-from odoo import models, fields, api
+from odoo import models, fields, api, _
 
 
 class DeliveryBoys(models.Model):
@@ -46,9 +46,25 @@ class DeliveryBoys(models.Model):
 
     def action_confirm(self):
         self.state = 'assigned'
+        self.deli_order_id.write({
+            'carrier_id': self.deli_boy_id.id,
+            'carrier_tracking_ref': self.name,
+        })
 
     def action_done(self):
-        ...
+        return {
+            'name': _('Complete delivery'),
+            'view_mode': 'form',
+            'view_type': 'form',
+            'view_id': self.env.ref('delivery_boys_mgmt.complete_delivery_wizard_form_view').id,
+            'res_model': 'complete.delivery.wizard',
+            'context': {
+                'delivery_order_id': self.deli_order_id.id,
+                'delivery_boys_id': self.id,
+            },
+            'type': 'ir.actions.act_window',
+            'target': 'new'
+        }
 
     def action_refuse(self):
         self.state = 'new'
@@ -58,4 +74,15 @@ class DeliveryBoys(models.Model):
         })
 
     def action_cancel(self):
-        ...
+        return {
+            'name': _('Cancel delivery'),
+            'view_mode': 'form',
+            'view_type': 'form',
+            'view_id': self.env.ref('delivery_boys_mgmt.cancel_delivery_wizard_form_view').id,
+            'res_model': 'cancel.delivery.wizard',
+            'context': {
+                'delivery_order_id': self.deli_order_id.id,
+            },
+            'type': 'ir.actions.act_window',
+            'target': 'new'
+        }
