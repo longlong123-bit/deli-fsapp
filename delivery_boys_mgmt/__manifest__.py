@@ -13,7 +13,9 @@
         'data/sequence.xml',
         'wizard/cancel_delivery_boys_wizard_views.xml',
         'views/delivery_boys_views.xml',
-        'views/menus.xml'
+        'wizard/complete_delivery_wizard.xml',
+        'wizard/cancel_delivery_wizard.xml',
+        'views/menus.xml',
     ],
     'application': True
 }

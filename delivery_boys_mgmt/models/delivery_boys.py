@@ -1,4 +1,4 @@
-from odoo import models, fields, api
+from odoo import models, fields, api, _
 
 
 class DeliveryBoys(models.Model):
@@ -130,7 +130,19 @@ class DeliveryBoys(models.Model):
         }
 
     def action_done(self):
-        ...
+        return {
+            'name': _('Complete delivery'),
+            'view_mode': 'form',
+            'view_type': 'form',
+            'view_id': self.env.ref('delivery_boys_mgmt.complete_delivery_wizard_form_view').id,
+            'res_model': 'complete.delivery.wizard',
+            'context': {
+                'delivery_order_id': self.deli_order_id.id,
+                'delivery_boys_id': self.id,
+            },
+            'type': 'ir.actions.act_window',
+            'target': 'new'
+        }
 
     def action_refuse(self):
         self.write({
@@ -145,10 +157,15 @@ class DeliveryBoys(models.Model):
 
     def action_cancel(self):
         return {
+            'name': _('Cancel delivery'),
             'type': 'ir.actions.act_window',
             'view_type': 'form',
             'view_mode': 'form',
             'view_id': self.env.ref('delivery_boys_mgmt.cancel_delivery_boys_wizard_form_view').id,
             'res_model': 'cancel.delivery.boys.wizard',
+            'context': {
+                'delivery_order_id': self.deli_order_id.id,
+            },
+            'type': 'ir.actions.act_window',
             'target': 'new'
         }

@@ -15,6 +15,7 @@
         'wizard/booking_viettelpost_wizard_views.xml',
         'wizard/booking_ahamove_wizard_views.xml',
         'wizard/booking_delivery_boys_wizard.xml',
+        'views/res_partner_views.xml',
         'views/stock_picking_views.xml',
     ],
     'application': True
