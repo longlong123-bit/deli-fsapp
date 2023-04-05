@@ -62,10 +62,44 @@ def validate_token(func):
         return func(self, *args, **kwargs)
     return wrap
 
+def validate_payload(func):
+    @functools.wraps(func)
+    def wrap(self, *args, **kwargs):
+        path = request.httprequest.path
+        payload = request.jsonrequest
+
+        if 'vtp' in path:
+            keys_payload = list(payload['DATA'].keys())
+            if 'ORDER_NUMBER' not in keys_payload or 'STATUS_NAME' not in keys_payload:
+                order_number = 'ORDER_NUMBER' if 'ORDER_NUMBER' not in keys_payload else False
+                status_name = 'STATUS_NAME' if 'STATUS_NAME' not in keys_payload else False
+                if order_number or status_name:
+                    return invalid_response("payload_invalid", "Payload don't have %s" % "ORDER_NUMBER & STATUS_NAME" if 'ORDER_NUMBER' not in keys_payload and 'STATUS_NAME' not in keys_payload else order_number or status_name, 401)
+            else:
+                if not payload['DATA']['ORDER_NUMBER']:
+                    return invalid_response("data_null", "ORDER_NUMBER is empty!", 401)
+                if not payload['DATA']['STATUS_NAME']:
+                    return invalid_response("data_null", "STATUS_NAME is empty!", 401)
+        elif 'ahamove' in path:
+            keys_payload = payload.keys()
+            if '_id' or 'status' not in keys_payload:
+                order_number = '_id' if '_id' not in keys_payload else False
+                status_name = 'status' if 'status' not in keys_payload else False
+                return invalid_response("payload_invalid", "Payload don't have %s" % "_id & status" if '_id' not in keys_payload and 'status' not in keys_payload else order_number or status_name, 401)
+            else:
+                if not payload['_id']:
+                    return invalid_response("data_null", "_id is empty!", 401)
+                if not payload['status']:
+                    return invalid_response("data_null", "status is empty!", 401)
+        else:
+            return invalid_response("path_error", "path is not formatted", 401)
+        return func(self, *args, **kwargs)
+    return wrap
 
 class WebhookDeliController(Controller):
 
     @validate_token
+    @validate_payload
     @route('/api/v1/update_delivery_carrier_vtp', type='json', auth='none', methods=["POST"], csrf=False)
     def _update_delivery_carrier_viettel_post(self, **payload):
         try:
@@ -83,6 +117,7 @@ class WebhookDeliController(Controller):
             return invalid_response("Update delivery carrier viettel post failed", "Error: %s" % error)
 
     @validate_token
+    @validate_payload
     @route('/api/v1/update_delivery_carrier_ahamove', type='json', auth='none', methods=["POST"], csrf=False)
     def _update_delivery_carrier_ahamove(self, **payload):
         try:
