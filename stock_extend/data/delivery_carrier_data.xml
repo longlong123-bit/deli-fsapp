@@ -2,8 +2,8 @@
 <odoo>
     <data>
         <record id="product_product_delivery_ahamove" model="product.product">
-            <field name="name">Ahamove Delivery Service</field>
-            <field name="default_code">Ahamove_001</field>
+            <field name="name">Delivery Service</field>
+            <field name="default_code">Ahamove</field>
             <field name="type">service</field>
             <field name="categ_id" ref="delivery.product_category_deliveries"/>
             <field name="sale_ok" eval="False"/>
@@ -19,8 +19,8 @@
         </record>
 
         <record id="product_product_delivery_boys" model="product.product">
-            <field name="name">Delivery Boys Service</field>
-            <field name="default_code">DeliBoys_001</field>
+            <field name="name">Delivery Service</field>
+            <field name="default_code">Delivery Boys</field>
             <field name="type">service</field>
             <field name="categ_id" ref="delivery.product_category_deliveries"/>
             <field name="sale_ok" eval="False"/>

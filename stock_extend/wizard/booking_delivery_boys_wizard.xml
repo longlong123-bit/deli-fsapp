@@ -6,38 +6,42 @@
         <field name="arch" type="xml">
             <form>
                 <div class="oe_title">
-                    <h1><field name="delivery_order_id" force_save="1"/></h1>
+                    <h1><field name="deli_order_id" force_save="1"/></h1>
+                    <h3><field name="deli_carrier_id"/></h3>
                 </div>
                 <group>
-<!--                        <label for="delivery_boy_id" string="Shipper Infomation"/>-->
-                    <group name="shipper_info">
-                        <field name="delivery_boy_id"/>
-                        <field name="delivery_boy_phone"/>
-                    </group>
-<!--                       <label for="customer_id" string="Receiver Infomation"/>-->
-                    <group name="receiver_info">
-                        <field name="receiver_id"/>
-                        <span class="o_form_label o_td_label" name="address_name">
-                            <b>Address</b>
-                        </span>
-                        <div class="o_address_format">
-                            <field name="street" placeholder="Street..." class="o_address_street"/>
-                            <field name="street2" placeholder="Street 2..." class="o_address_street"/>
-                            <field name="city_id" placeholder="City" class="o_address_city"/>
-                        </div>
-                        <field name="receiver_phone"/>
-                    </group>
-<!--                        <label for="delivery_order_id" string="Fee Infomation"/>-->
-                    <group name="fee_info">
-                        <field name="cod"/>
+                    <group>
+                        <field name="name"/>
+                        <field name="warehouse_id" options="{'no_create_edit': True, 'no_open': True}"/>
+                        <field name="boy_id" options="{'no_create_edit': True, 'no_open': True}"/>
+                        <field name="boy_phone" widget="phone"/>
                         <field name="fee_ship"/>
+                        <field name="cod"/>
+                        <field name="no_of_package"/>
+                        <label for="est_deli" string="Estimate Deli"/>
+                        <div class="o_row">
+                            <field name="est_deli" class="oe_inline"/>
+                            <span><field name="hours_uom_name"/></span>
+                        </div>
+                        <label for="weight" string="Weight"/>
+                        <div class="o_row">
+                            <field name="weight" class="oe_inline"/>
+                            <span><field name="gram_uom_name"/></span>
+                        </div>
                     </group>
-                    <group name="warehouse_info">
+                    <group>
+                        <field name="receiver_id" options="{'no_create_edit': True, 'no_open': True}"/>
+                        <field name="receiver_phone" widget="phone"/>
+                        <label for="receiver_street" string="Address"/>
+                        <div class="o_address_format">
+                            <field name="receiver_street" class="o_address_street" placeholder="Street"/>
+                            <field name="receiver_ward_id" class="o_address_city" placeholder="Ward" options="{'no_create': True, 'no_open': True}"/>
+                            <field name="receiver_district_id" class="o_address_state" placeholder="District" options="{'no_create': True, 'no_open': True}"/>
+                            <field name="receiver_province_id" class="o_address_zip" placeholder="City" options="{'no_create': True, 'no_open': True}"/>
+                        </div>
+                        <field name="note"/>
                     </group>
                 </group>
-<!--                <group>-->
-<!--                    <field name="deli_order_id" force_save="1"/>-->
-<!--                </group>-->
                 <footer>
                     <button string="Cancel" class="btn-secondary" special="cancel"/>
                     <button string="Booking" type="object" name="action_booking_delivery_boys" class="btn btn-primary"/>

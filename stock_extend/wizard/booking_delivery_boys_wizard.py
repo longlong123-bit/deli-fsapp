@@ -1,52 +1,120 @@
+from typing import Dict, Any
 from odoo import fields, models, api, _
+from odoo.tools import ustr
 from odoo.exceptions import UserError
+
 
 class BookingDeliveryBoysWizard(models.TransientModel):
     _name = 'booking.delivery.boys.wizard'
     _description = 'This module fills and confirms info about shipment creating handover to internal carriers.'
 
-    def _get_delivery_order(self):
-        return self.env['stock.picking'].sudo().search([('id', '=', self._context.get('default_deli_order_id'))], limit=1)
+    def _get_default_sequence(self):
+        try:
+            sequence = self.env['ir.sequence'].search([
+                ('code', '=', 'delivery.boys'),
+                ('prefix', '=', 'DB'),
+                ('name', '=', 'Delivery Boys Sequence'),
+                ('active', '=', True)
+            ])
+            next_document = sequence.get_next_char(sequence.number_next_actual)
+            self._cr.execute('''SELECT name FROM delivery_boys''')
+            query_res = self._cr.fetchall()
+            while next_document in [res[0] for res in query_res]:
+                next_tmp = self.env['ir.sequence'].next_by_code('delivery.boys')
+                next_document = next_tmp
+            return next_document
+        except Exception as e:
+            raise UserError(_(ustr(e)))
 
-    def _get_info_receiver(self):
-        return self.env['res.partner'].sudo().search([('id', '=', self._get_delivery_order().partner_id.id)], limit=1)
-
-    def _get_cod(self):
-        return self._get_delivery_order().sale_id.amount_due if self._get_delivery_order().sale_id.payment_method == 'cod' else 0
-
-    name = fields.Char(string='Name', readonly=True)
-    delivery_boy_id = fields.Many2one('res.partner', 'Delivery Boy', required=True)
-    delivery_boy_phone = fields.Char(related='delivery_boy_id.phone', string='Phone', required=True, readonly=True)
-    receiver_id = fields.Many2one('res.partner', 'Receiver', default=_get_info_receiver, required=True, readonly=True, tracking=True)
-    street = fields.Char(related='receiver_id.street', string='Street', readonly=True)
-    street2 = fields.Char(related='receiver_id.street2', string='Street 2', readonly=True)
-    ward_id = fields.Many2one('res.ward', related='receiver_id.ward_id', string='Ward', readonly=True)
-    district_id = fields.Many2one('res.district', related='receiver_id.district_id', string='District', readonly=True)
-    city_id = fields.Many2one('res.city', related='receiver_id.city_id', string='City', readonly=True)
-    receiver_phone = fields.Char(related='receiver_id.phone', string='Phone', readonly=True)
     currency_id = fields.Many2one('res.currency', string='Currency', default=lambda self: self.env.company.currency_id)
-    delivery_order_id = fields.Many2one('stock.picking', string='Delivery order', default=_get_delivery_order, required=True, readonly=True)
-    fee_ship = fields.Monetary(string='Fee ship', currency_field='currency_id')
-    cod = fields.Monetary(string='COD', default=_get_cod, currency_field='currency_id')
+    name = fields.Char(string='B/L code', readonly=True, default=_get_default_sequence)
+    warehouse_id = fields.Many2one('stock.warehouse', string='Warehouse', required=True)
+    deli_carrier_id = fields.Many2one('delivery.carrier', string='Delivery Carrier', required=True, readonly=True)
 
-    @api.onchange('cod')
-    def _onchange_cod(self):
-        if self.delivery_order_id.sale_id.payment_method == 'cod' and self.delivery_order_id.sale_id.amount_total < self.cod:
-            raise UserError(_("COD invalid!"))
-        elif self.delivery_order_id.sale_id.payment_method == 'online' and self.cod > 0:
-            raise UserError(_('COD invalid!'))
+    boy_id = fields.Many2one('res.partner', 'Delivery Boy', required=True)
+    boy_phone = fields.Char(string='Phone', required=True)
+
+    receiver_id = fields.Many2one('res.partner', string='Receiver', required=True)
+    receiver_phone = fields.Char(string='Phone', required=True)
+    receiver_street = fields.Char(string='Street', required=True)
+    receiver_ward_id = fields.Many2one('res.ward', string='Ward', required=True)
+    receiver_district_id = fields.Many2one('res.district', string='District', required=True)
+    receiver_province_id = fields.Many2one('res.city', string='Province', required=True)
+
+    deli_order_id = fields.Many2one('stock.picking', string='Delivery order', required=True, readonly=True)
+    fee_ship = fields.Monetary(string='Fee ship', currency_field='currency_id')
+    cod = fields.Monetary(string='COD', currency_field='currency_id')
+    no_of_package = fields.Integer(string='Number of package', default=1, required=True)
+    est_deli = fields.Integer(string='Estimate delivery')
+    weight = fields.Float(string='Weight')
+    note = fields.Text(string='Note')
+
+    def _get_default_hours_uom_name(self):
+        return self._get_hours_uom_name()
+
+    def _get_default_gram_uom_name(self):
+        return self._get_gram_uom_name()
+
+    hours_uom_name = fields.Char(string='Hours unit of measure label', default=_get_default_hours_uom_name,
+                                 compute='_compute_hours_uom_name')
+
+    gram_uom_name = fields.Char(string='Gram unit of measure label', default=_get_default_gram_uom_name,
+                                compute='_compute_gram_uom_name')
+
+    @api.model
+    def _get_hours_uom_name(self):
+        return self.env.ref('uom.product_uom_hour').display_name
+
+    @api.model
+    def _get_gram_uom_name(self):
+        return self.env.ref('uom.product_uom_gram').display_name
+
+    def _compute_hours_uom_name(self):
+        for rec in self:
+            rec.hours_uom_name = self._get_hours_uom_name()
+
+    def _compute_gram_uom_name(self):
+        for rec in self:
+            rec.gram_uom_name = self._get_gram_uom_name()
+
+    @api.onchange('boy_id')
+    def _onchange_boy_id(self):
+        for rec in self:
+            if rec.boy_id:
+                rec.boy_phone = rec.boy_id.phone
+
+    def _get_payload_delivery_boys(self) -> Dict[str, Any]:
+        payload: dict = {
+            'name': self.name,
+            'deli_boy_id': self.boy_id.id,
+            'deli_phone': self.boy_phone,
+            'deli_order_id': self.deli_order_id.id,
+            'partner_id': self.receiver_id.id,
+            'partner_phone': self.receiver_phone,
+            'street': self.receiver_street,
+            'ward_id': self.receiver_ward_id.id,
+            'district_id': self.receiver_district_id.id,
+            'city_id': self.receiver_province_id.id,
+            'fee_ship': self.fee_ship,
+            'cod': self.cod,
+            'state': 'new',
+            'num_of_package': self.no_of_package,
+            'warehouse_id': self.warehouse_id.id,
+            'note': self.note,
+            'weight': self.weight,
+            'est_deli_time': self.est_deli
+        }
+        return payload
 
     def action_booking_delivery_boys(self):
-        delivery_boys_model = self.env['delivery.boys'].sudo()
-        try:
-            delivery_boys_model.create({
-                'deli_boy_id': self.delivery_boy_id.id,
-                'partner_id': self.receiver_id.id,
-                'deli_order_id': self.delivery_order_id.id,
-                'num_of_package': 1,
-                'fee_ship': self.fee_ship,
-                'cod': self.cod,
-            })
-        except Exception as error:
-            raise ValueError(_("Something went wrong when create data!\n Error: %s" % str(error)))
-        return True
+        payload = self._get_payload_delivery_boys()
+        delivery_boy_id = self.env['delivery.boys'].sudo().create(payload)
+
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Delivery Book',
+            'res_model': 'delivery.boys',
+            'view_mode': 'form',
+            'res_id': delivery_boy_id.id,
+            'target': 'current',
+        }

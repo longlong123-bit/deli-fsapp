@@ -1,4 +1,3 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_delivery_boys_manager,access_delivery_boys_manager,model_delivery_boys,base.group_system,1,1,1,1
-access_complete_delivery_wizard,access.complete.delivery.manager,model_complete_delivery_wizard,base.group_system,1,1,1,1
-access_cancel_delivery_wizard_manager,access.cancel.delivery.wizard.manager,model_cancel_delivery_wizard,base.group_system,1,1,1,1
+access_cancel_delivery_boys_wizard_manager,access_cancel_delivery_boys_wizard_manager,model_cancel_delivery_boys_wizard,base.group_system,1,1,1,1

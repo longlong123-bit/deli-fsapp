@@ -2,4 +2,5 @@ id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_booking_viettelpost_wizard_manager,access_booking_viettelpost_wizard_manager,model_booking_viettelpost_wizard,base.group_system,1,1,1,1
 access_select_deli_carrier_wizard_manager,access_select_deli_carrier_wizard_manager,model_select_delivery_carrier_wizard,base.group_system,1,1,1,1
 access_booking_delivery_boys_wizard_manager,access.booking.delivery.boys.wizard.manager,model_booking_delivery_boys_wizard,base.group_system,1,1,1,1
+access_booking_ahamove_wizard_manager,access_booking_ahamove_wizard_manager,model_booking_ahamove_wizard,base.group_system,1,1,1,1
 access_res_partner_manager,access.res.partner.manager,model_res_partner,base.group_system,1,1,1,1

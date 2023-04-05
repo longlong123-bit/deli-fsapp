@@ -101,7 +101,7 @@ class WebhookDeliController(Controller):
     @validate_token
     @validate_payload
     @route('/api/v1/update_delivery_carrier_vtp', type='json', auth='none', methods=["POST"], csrf=False)
-    def _update_delivery_carrier_viettel_post(self, **payload):
+    def _update_delivery_carrier_viettelpost(self, **payload):
         try:
             payload = request.jsonrequest
             if not payload:
