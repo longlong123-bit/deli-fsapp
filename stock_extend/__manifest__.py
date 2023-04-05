@@ -11,8 +11,9 @@
     'data': [
         'security/ir.model.access.csv',
         'data/delivery_carrier_data.xml',
-        'wizard/booking_viettelpost_wizard_views.xml',
         'wizard/select_deli_carrier_wizard_views.xml',
+        'wizard/booking_viettelpost_wizard_views.xml',
+        'wizard/booking_ahamove_wizard_views.xml',
         'wizard/booking_delivery_boys_wizard.xml',
         'views/stock_picking_views.xml',
     ],

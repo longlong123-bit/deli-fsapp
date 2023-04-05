@@ -1,6 +1,5 @@
-from typing import List, Tuple
-
 from odoo import models, fields, _
+from odoo.addons.stock_extend.wizard.booking_delivery_boys_wizard import BookingDeliveryBoysWizard
 
 
 class DeliveryBook(models.Model):
@@ -9,68 +8,16 @@ class DeliveryBook(models.Model):
     _rec_name = 'bl_code'
     _description = 'Manage deliveries by home shipper'
 
-    @staticmethod
-    def get_viettelpost_service_types() -> List[Tuple]:
-        return [
-            ('VCN', 'Tài liệu nhanh'),
-            ('V24', 'Đồng giá 24K'),
-            ('LECO', 'Hàng nặng tiết kiệm'),
-            ('VTK', 'Tài liệu tiết kiệm'),
-            ('V60', 'V60 Dịch vụ Nhanh 60h'),
-            ('VHT', 'Hỏa tốc, hẹn giờ'),
-            ('NCOD', 'Chuyển phát nhanh'),
-            ('SCOD', 'SCOD Giao hàng thu tiền'),
-            ('PTN', 'Nội tỉnh nhanh'),
-            ('V25', 'V25'),
-            ('V30', 'V30'),
-            ('V20', 'V20'),
-            ('PHS', 'Nội tỉnh tiết kiệm'),
-            ('V35', 'V35'),
-            ('VBS', 'VBS Nhanh theo hộp'),
-            ('V02', 'TMDT Phát nhanh 2h'),
-            ('VBE', 'VBE Tiết kiệm theo hộp'),
-            ('LCOD', 'Chuyển phát tiêu chuẩn'),
-            ('ECOD', 'ECOD Giao hành thu tiền tiết kiệm'),
-            ('LSTD', 'Hàng nặng nhanh'),
-            ('VCBA', 'Chuyển phát đường bay'),
-            ('VCBO', 'Chuyển phát đường bộ'),
-            ('V505', 'Dịch vụ 5+ gói 500g'),
-            ('V510', 'Dịch vụ 5+ gói 1000g'),
-            ('V520', 'Dịch vụ 5+ gói 2000g'),
-            ('PTTT', 'Phân tích thị trường'),
-            ('DHC', 'DHL Chuyển phát quốc tế'),
-            ('UPS', 'UPS quốc tế chỉ định'),
-            ('VQN', 'VQN Quốc tế nhanh'),
-            ('VQE', 'VQE Quốc tế chuyên tuyến'),
-            ('VVC', 'VVC Giao voucher thu tiền'),
-            ('VCT', 'VCT Chuyển tiền nhận tại địa chỉ'),
-        ]
-
-    @staticmethod
-    def viettelpost_order_payments() -> List[Tuple]:
-        return [('1', _('Uncollect money')),
-                ('2', _('Collect express fee and price of goods.')),
-                ('3', _('Collect price of goods')),
-                ('4', _('Collect express fee'))]
-
-    @staticmethod
-    def viettelpost_product_types() -> List[Tuple]:
-        return [('TH', 'Envelope'), ('HH', 'Goods')]
-
-    @staticmethod
-    def viettelpost_national_types() -> List[Tuple]:
-        return [('1', 'Inland'), ('0', 'International')]
-
     carrier_id = fields.Many2one('delivery.carrier', string='Shipping Method', required=True, tracking=True)
     carrier_type = fields.Selection(related='carrier_id.delivery_type')
     currency_id = fields.Many2one('res.currency', string='Currency', default=lambda self: self.env.company.currency_id)
     service_type = fields.Selection(
-        selection=lambda self: DeliveryBook.get_viettelpost_service_types(), string='Service Type', default='VCN')
-    order_payment = fields.Selection(selection=lambda self: DeliveryBook.viettelpost_order_payments(),
+        selection=lambda self: BookingDeliveryBoysWizard.get_viettelpost_service_types(), string='Service Type', default='VCN')
+    order_payment = fields.Selection(selection=lambda self: BookingDeliveryBoysWizard.viettelpost_order_payments(),
                                      string='Order Payment', default='1')
-    product_type = fields.Selection(selection=lambda self: DeliveryBook.viettelpost_product_types(),
+    product_type = fields.Selection(selection=lambda self: BookingDeliveryBoysWizard.viettelpost_product_types(),
                                     string='Product Type', default='HH')
-    national_type = fields.Selection(selection=lambda self: DeliveryBook.viettelpost_national_types(),
+    national_type = fields.Selection(selection=lambda self: BookingDeliveryBoysWizard.viettelpost_national_types(),
                                      string='National Type', default='1')
 
     receiver_id = fields.Many2one('res.partner', string='Receiver', required=True)

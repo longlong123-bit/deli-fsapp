@@ -72,8 +72,26 @@ class SelectDeliveryCarrierWizard(models.TransientModel):
                 'type': 'ir.actions.act_window',
                 'view_type': 'form',
                 'view_mode': 'form',
-                'view_id': self.env.ref('tr_connect_ahamove.popup_booking_ahamove_wizard_form').id,
-                'res_model': 'popup.booking.ahamove',
+                'context': {
+                    'default_deli_order_id': self.deli_order_id.id,
+                    'default_deli_carrier_id': self.deli_carrier_id.id,
+                    'default_receiver_id': self.deli_order_id.partner_id.id,
+                    'default_receiver_phone': self.deli_order_id.partner_id.phone,
+                    'default_receiver_street': self.deli_order_id.partner_id.street,
+                    'default_receiver_ward_id': self.deli_order_id.partner_id.ward_id.id,
+                    'default_receiver_district_id': self.deli_order_id.partner_id.district_id.id,
+                    'default_receiver_province_id': self.deli_order_id.partner_id.city_id.id,
+                    'default_warehouse_id': self.deli_order_id.picking_type_id.warehouse_id.id,
+                    'default_sender_id': self.deli_order_id.picking_type_id.warehouse_id.partner_id.id,
+                    'default_sender_phone': self.deli_order_id.picking_type_id.warehouse_id.partner_id.phone,
+                    'default_sender_street': self.deli_order_id.picking_type_id.warehouse_id.partner_id.street,
+                    'default_sender_ward_id': self.deli_order_id.picking_type_id.warehouse_id.partner_id.ward_id.id,
+                    'default_sender_district_id': self.deli_order_id.picking_type_id.warehouse_id.partner_id.district_id.id,
+                    'default_sender_province_id': self.deli_order_id.picking_type_id.warehouse_id.partner_id.city_id.id,
+                    'default_cod': self.deli_order_id.sale_id.amount_due
+                },
+                'view_id': self.env.ref('stock_extend.booking_ahamove_wizard_form_view').id,
+                'res_model': 'booking.ahamove.wizard',
                 'target': 'new'
             }
         else:

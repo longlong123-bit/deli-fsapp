@@ -1,7 +1,7 @@
 from typing import Dict, Any
 from odoo import fields, models, api, _
 from odoo.tools import ustr
-from odoo.exceptions import UserError, ValidationError
+from odoo.exceptions import UserError
 
 
 class BookingDeliveryBoysWizard(models.TransientModel):
@@ -109,6 +109,7 @@ class BookingDeliveryBoysWizard(models.TransientModel):
     def action_booking_delivery_boys(self):
         payload = self._get_payload_delivery_boys()
         delivery_boy_id = self.env['delivery.boys'].sudo().create(payload)
+
         return {
             'type': 'ir.actions.act_window',
             'name': 'Delivery Book',
