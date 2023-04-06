@@ -7,16 +7,19 @@
     'support': 'odoo.tangerine@gmail.com',
     'author': 'Tangerine',
     'license': 'LGPL-3',
-    'depends': ['base', 'contacts', 'mail', 'stock', 'delivery_boys_mgmt', 'delivery_book_mgmt', 'tr_connect_ahamove', 'delivery_viettelpost'],
+    'depends': ['base', 'contacts', 'mail', 'stock', 'tr_connect_ahamove', 'delivery_viettelpost'],
     'data': [
+        'security/deli_boys_security.xml',
         'security/ir.model.access.csv',
         'data/delivery_carrier_data.xml',
+        'data/res_partner_data.xml',
         'wizard/select_deli_carrier_wizard_views.xml',
         'wizard/booking_viettelpost_wizard_views.xml',
         'wizard/booking_ahamove_wizard_views.xml',
-        'wizard/booking_delivery_boys_wizard.xml',
+        'wizard/booking_delivery_boys_wizard_views.xml',
         'views/res_partner_views.xml',
         'views/stock_picking_views.xml',
+        'views/menus.xml'
     ],
     'application': True
 }

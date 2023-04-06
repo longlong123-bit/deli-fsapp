@@ -1,9 +1,18 @@
 import functools
+import odoo
 import json
 import datetime
-import werkzeug.wrappers
+import re
+from werkzeug.wrappers import Response
+from typing import Dict, Any
+
 from odoo.http import Controller, request, route
-from odoo.exceptions import AccessError, UserError, AccessDenied
+
+
+STATUS_OK = 200
+STATUS_BAD_REQUEST = 400
+STATUS_UNAUTHORIZED = 401
+STATUS_NOT_FOUND = 404
 
 
 def default(o):
@@ -13,29 +22,24 @@ def default(o):
         return str(o)
 
 
-def valid_response(data, message='', status=200):
+def valid_response(message: str, status: int = STATUS_OK):
     """Valid Response
     This will be return when the http request was successfully processed."""
-    response = {"status": "success",
-                "message": message}
-    if len(data) > 0:
-        response['data'] = data
-    return werkzeug.wrappers.Response(
-        status=status, content_type="application/json; charset=utf-8", response=json.dumps(response, default=default),
-    )
+    response = {'status': 'success', 'message': message}
+    return Response(status=status, content_type='application/json; charset=utf-8',
+                    response=json.dumps(response, default=default))
 
 
-def invalid_response(typ, message=None, status=401):
-    """Invalid Response
-    This will be the return value whenever the server runs into an error
-    either from the client or the server."""
-    return werkzeug.wrappers.Response(
+def invalid_response(message: str, status: int):
+    """
+        Invalid Response
+        This will be the return value whenever the server runs into an error
+        either from the client or the server.
+    """
+    return Response(
         status=status,
-        content_type="application/json; charset=utf-8",
-        response=json.dumps(
-            {"status": "error", "message": str(message) if str(message) else "wrong arguments (missing validation)"},
-            default=datetime.datetime.isoformat,
-        ),
+        content_type="application/json; charset=utf-8", response=json.dumps({'status': 'error', 'message': message},
+                                                                            default=datetime.datetime.isoformat)
     )
 
 
@@ -43,104 +47,99 @@ def validate_token(func):
     @functools.wraps(func)
     def wrap(self, *args, **kwargs):
         path = request.httprequest.path
-        if 'vtp' in path:
-            payload = request.jsonrequest
-            authorization = request.httprequest.headers.get("Authorization")
+        if re.search(r"viettelpost", path):
+            authorization = request.httprequest.headers.get('Authorization')
             if not authorization:
-                payload_keys = payload.keys()
-                if 'TOKEN' not in payload_keys:
-                    return invalid_response("access_token_not_found", "Missing Authorization in request header of VTP", 401)
-                authorization = payload['TOKEN']
+                return invalid_response('The header Authorization missing', STATUS_BAD_REQUEST)
             partner_code = 'VTP'
-        elif 'ahamove' in path:
-            authorization = request.httprequest.headers.get("apikey")
+        elif re.search(r"ahamove", path):
+            authorization = request.httprequest.headers.get('apikey')
+            if not authorization:
+                return invalid_response('The header apikey missing', STATUS_BAD_REQUEST)
             partner_code = 'AHAMOVE'
         else:
-            return invalid_response("path_error", "path is not formatted", 401)
-        if not authorization:
-            return invalid_response("access_token_not_found", "Missing Authorization in request header", 401)
-        token = request.env['res.partner'].sudo().search([('partner_code', '=', partner_code), ('authorization', "=", authorization)], limit=1)
-        if token.find_one_or_create_token(partner_id=token.id) != authorization:
-            return invalid_response("access_token", "Token seems to have expired or invalid", 401)
-
-        request.session.uid = token.user_id.id
-        request.uid = token.user_id.id
+            return invalid_response('Path is not formatted', STATUS_BAD_REQUEST)
+        token = request.env['res.partner'].sudo().search([('partner_code', '=', partner_code),
+                                                         ('authorization', "=", authorization)], limit=1)
+        if not token:
+            return invalid_response('The token seems to have invalid.', STATUS_NOT_FOUND)
         return func(self, *args, **kwargs)
     return wrap
 
-def validate_payload(func):
-    @functools.wraps(func)
-    def wrap(self, *args, **kwargs):
-        try:
-            path = request.httprequest.path
-            payload = request.jsonrequest
-            if not payload:
-                return invalid_response("payload_invalid", "Payload is not empty!", 401)
-            keys = payload.keys()
-            if 'vtp' in path:
-                # payload must be have 2 key: DATA & TOKEN
-                if "DATA" not in keys or "TOKEN" not in keys:
-                    return invalid_response("payload_invalid", "Payload is wrong format!", 401)
-                keys_payload = list(payload['DATA'].keys())
-                if 'ORDER_NUMBER' not in keys_payload:
-                    return invalid_response("payload_invalid", "Payload don't have %s" % 'ORDER_NUMBER')
-                elif 'STATUS_NAME' not in keys_payload:
-                    return invalid_response("payload_invalid", "Payload don't have %s" % 'STATUS_NAME')
-                elif not payload['DATA']['ORDER_NUMBER']:
-                    return invalid_response("data_null", "ORDER_NUMBER is empty!", 401)
-                elif not payload['DATA']['STATUS_NAME']:
-                    return invalid_response("data_null", "STATUS_NAME is empty!", 401)
-            elif 'ahamove' in path:
-                keys_payload = payload.keys()
-                if '_id' not in keys_payload:
-                    return invalid_response("payload_invalid", "Payload don't have %s" % '_id')
-                elif 'status' not in keys_payload:
-                    return invalid_response("payload_invalid", "Payload don't have %s" % 'status')
-                elif not payload['_id']:
-                    return invalid_response("data_null", "_id is empty!", 401)
-                elif not payload['status']:
-                    return invalid_response("data_null", "status is empty!", 401)
-            else:
-                return invalid_response("path_error", "path is not formatted", 401)
-        except Exception as error:
-            return invalid_response("error", "Error %s" % str(error))
-        return func(self, *args, **kwargs)
-    return wrap
 
 class WebhookDeliController(Controller):
 
-    @validate_token
-    @validate_payload
-    @route('/api/v1/update_delivery_carrier_vtp', type='json', auth='none', methods=["POST"], csrf=False)
-    def _update_delivery_carrier_viettelpost(self, **payload):
-        try:
-            payload = request.jsonrequest
-            if not payload:
-                return invalid_response("Error", "No data!")
-            delivery_book = request.env['delivery.book'].sudo().search([('bl_code', '=', payload['ORDER_NUMBER'])], limit=1)
-            if not delivery_book:
-                return invalid_response("Error", "Cannot find Delivery Carrier for VTP!")
-            delivery_book.write({
-                'state': payload['STATUS_NAME'],
-            })
-            return valid_response(payload, "Successfully!", 200)
-        except Exception as error:
-            return invalid_response("Update delivery carrier viettel post failed", "Error: %s" % error)
+    @staticmethod
+    def _validate_payload_webhook_viettelpost(payload: Dict[str, Any]):
+        if not payload:
+            return invalid_response(f'The payload is required.', STATUS_BAD_REQUEST)
+        elif 'ORDER_NUMBER' not in payload:
+            return invalid_response(f'The field ORDER_NUMBER missing.', STATUS_BAD_REQUEST)
+        elif 'STATUS_NAME' not in payload:
+            return invalid_response(f'The field STATUS_NAME missing.', STATUS_BAD_REQUEST)
+        elif not payload.get('ORDER_NUMBER'):
+            return invalid_response(f'The value of field ORDER_NUMBER is empty.', STATUS_BAD_REQUEST)
+        elif not payload.get('STATUS_NAME'):
+            return invalid_response(f'The value of field STATUS_NAME is empty.', STATUS_BAD_REQUEST)
+        else:
+            return True
+
+    @staticmethod
+    def _validate_payload_webhook_ahamove(payload: Dict[str, Any]):
+        if not payload:
+            return invalid_response(f'The payload is required.', STATUS_BAD_REQUEST)
+        elif '_id' not in payload:
+            return invalid_response(f'The field _id missing.', STATUS_BAD_REQUEST)
+        elif 'status' not in payload:
+            return invalid_response(f'The field status missing.', STATUS_BAD_REQUEST)
+        elif not payload.get('_id'):
+            return invalid_response(f'The value of field _id is empty.', STATUS_BAD_REQUEST)
+        elif not payload.get('status'):
+            return invalid_response(f'The value of field status is empty.', STATUS_BAD_REQUEST)
+        else:
+            return True
+
+    @staticmethod
+    def _registry_db():
+        db = request.session.db
+        registry = odoo.modules.registry.Registry(db)
+        with odoo.api.Environment.manage(), registry.cursor() as cr:
+            env = odoo.api.Environment(cr, odoo.SUPERUSER_ID, {})
+            return env
 
     @validate_token
-    @validate_payload
-    @route('/api/v1/update_delivery_carrier_ahamove', type='json', auth='none', methods=["POST"], csrf=False)
-    def _update_delivery_carrier_ahamove(self, **payload):
+    @route('/api/v1/webhook/viettelpost', type='json', auth='none', methods=["POST"], csrf=False)
+    def _update_delivery_book_viettelpost(self):
         try:
-            payload = request.jsonrequest
-            if not payload:
-                return invalid_response("Error", "No data!")
-            delivery_book = request.env['delivery.book'].sudo().search([('bl_code', '=', payload.get('_id'))], limit=1)
-            if not delivery_book:
-                return invalid_response("Error", "Cannot find Delivery Carrier for Ahamove")
-            delivery_book.write({
-                'state': payload['status'],
-            })
-            return valid_response(payload, "Successfully!", 200)
+            env = WebhookDeliController._registry_db()
+            payload = request.jsonrequest.get('DATA')
+            is_valid = WebhookDeliController._validate_payload_webhook_viettelpost(payload)
+            if is_valid is not True:
+                return is_valid
+            delivery_book_id = env['delivery.book'].search([('bl_code', '=', payload.get('ORDER_NUMBER'))], limit=1)
+            if not delivery_book_id:
+                return invalid_response(f'The order number {payload.get("ORDER_NUMBER")} not found.', STATUS_NOT_FOUND)
+            delivery_book_id.write({'state': payload.get('STATUS_NAME'), 'json_webhook': json.dumps(payload)})
+            return valid_response('The odoo received data successfully.')
         except Exception as error:
-            return invalid_response("Update delivery carrier ahamove failed", "Error: %s" % error)
+            return invalid_response(f'Exception: {error}', STATUS_NOT_FOUND)
+
+    @validate_token
+    @route('/api/v1/webhook/ahamove', type='json', auth='none', methods=["POST"], csrf=False)
+    def _update_delivery_book_ahamove(self):
+        try:
+            db = request.session.db
+            registry = odoo.modules.registry.Registry(db)
+            with odoo.api.Environment.manage(), registry.cursor() as cr:
+                env = odoo.api.Environment(cr, odoo.SUPERUSER_ID, {})
+                payload = request.jsonrequest
+                is_valid = WebhookDeliController._validate_payload_webhook_ahamove(payload)
+                if is_valid is not True:
+                    return is_valid
+                delivery_book_id = env['delivery.book'].sudo().search([('bl_code', '=', payload.get('_id'))], limit=1)
+                if not delivery_book_id:
+                    return invalid_response(f'The order number {payload.get("_id")} not found.', STATUS_NOT_FOUND)
+                delivery_book_id.write({'state': payload.get('status'), 'json_webhook': json.dumps(payload)})
+                return valid_response('The odoo received data successfully.')
+        except Exception as error:
+            return invalid_response(f'Exception: {error}', STATUS_NOT_FOUND)

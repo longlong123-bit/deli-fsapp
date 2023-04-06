@@ -18,6 +18,13 @@ class DICT_KEY(Enum):
     RECEIVER_DISTRICT: str = 'RECEIVER_DISTRICT'
     RECEIVER_WARDS: str = 'RECEIVER_WARDS'
 
+    ORDER_ID: str = 'order_id'
+    STATUS: str = 'status'
+    SHARED_LINK: str = 'shared_link'
+    SERVICE_ID: str = 'service_id'
+    TOTAL_PRICE: str = 'total_price'
+    ORDER: str = 'order'
+
 
 @dataclass(frozen=True)
 class ViettelpostDataclass:
@@ -53,3 +60,21 @@ class ViettelpostDataclass:
         return bl_code, money_collection, exchange_weight, money_total, money_total_fee, money_fee, \
                money_collection_fee, money_other_fee, money_vat, kpi_ht, receiver_province, receiver_district,\
                receiver_wards
+
+
+@dataclass(frozen=True)
+class AhamoveDataclass:
+    order_id: str
+    status: str
+    shared_link: str
+    service_id: str
+    total_price: int
+
+    @staticmethod
+    def load_data(dict_data: Dict[str, Any]) -> Sequence[Any]:
+        order_id = dict_data.get(DICT_KEY.ORDER_ID.value)
+        status = dict_data.get(DICT_KEY.STATUS.value)
+        shared_link = dict_data.get(DICT_KEY.SHARED_LINK.value)
+        service_id = dict_data.get(DICT_KEY.ORDER.value).get(DICT_KEY.SERVICE_ID.value)
+        total_price = dict_data.get(DICT_KEY.ORDER.value).get(DICT_KEY.TOTAL_PRICE.value)
+        return order_id, status, shared_link, service_id, total_price

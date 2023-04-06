@@ -7,14 +7,13 @@
     'support': 'odoo.tangerine@gmail.com',
     'author': 'Tangerine',
     'license': 'LGPL-3',
-    'depends': ['base', 'mail', 'viettelpost_address', 'contacts', 'stock', 'sale', 'delivery'],
+    'depends': ['base', 'mail', 'viettelpost_address', 'stock_extend', 'contacts', 'stock', 'sale', 'delivery'],
     'data': [
         'security/ir.model.access.csv',
         'data/sequence.xml',
         'wizard/cancel_delivery_boys_wizard_views.xml',
+        'wizard/complete_delivery_wizard_views.xml',
         'views/delivery_boys_views.xml',
-        'wizard/complete_delivery_wizard.xml',
-        'wizard/cancel_delivery_wizard.xml',
         'views/menus.xml',
     ],
     'application': True

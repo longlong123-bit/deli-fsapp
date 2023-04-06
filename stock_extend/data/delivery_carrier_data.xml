@@ -35,19 +35,5 @@
             <field name="delivery_type">deli_boys</field>
             <field name="country_ids" eval="[(4,(ref('base.vn')))]"/>
         </record>
-
-        <record id="delivey_carrier_viettelpost_contact" model="res.partner">
-            <field name="name">Viettel Post Service</field>
-            <field name="company_type">person</field>
-            <field name="partner_code">VTP</field>
-            <field name="type">delivery_carrier</field>
-        </record>
-
-        <record id="delivey_carrier_ahamove_contact" model="res.partner">
-            <field name="name">Ahamove Delivery Service</field>
-            <field name="company_type">person</field>
-            <field name="partner_code">AHAMOVE</field>
-            <field name="type">delivery_carrier</field>
-        </record>
     </data>
 </odoo>

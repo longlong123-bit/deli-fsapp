@@ -80,7 +80,8 @@ class BookingViettelpostWizard(models.TransientModel):
     receiver_district_id = fields.Many2one('res.district', string='District', required=True)
     receiver_province_id = fields.Many2one('res.city', string='Province', required=True)
 
-    sender_id = fields.Many2one('stock.warehouse', string='Sender', required=True)
+    warehouse_id = fields.Many2one('stock.warehouse', string='Warehouse', required=True)
+    sender_id = fields.Many2one('res.partner', string='Sender', required=True)
     sender_phone = fields.Char(string='Phone', required=True)
     sender_street = fields.Char(string='Address', required=True)
     sender_ward_id = fields.Many2one('res.ward', string='Ward', required=True)
@@ -107,15 +108,14 @@ class BookingViettelpostWizard(models.TransientModel):
         return address
 
     def _get_sender(self) -> Dict[str, Any]:
-        partner_id = self.sender_id.partner_id
         sender: dict = {
-            'SENDER_FULLNAME': partner_id.name,
+            'SENDER_FULLNAME': self.sender_id.name,
             'SENDER_ADDRESS': self._get_address_sender(),
-            'SENDER_PHONE': partner_id.phone,
-            'SENDER_EMAIL': partner_id.email or '',
-            'SENDER_WARD': partner_id.ward_id.viettelpost_wards_id,
-            'SENDER_DISTRICT': partner_id.district_id.viettelpost_district_id,
-            'SENDER_PROVINCE': partner_id.city_id.viettelpost_province_id,
+            'SENDER_PHONE': self.sender_id.phone,
+            'SENDER_EMAIL': self.sender_id.email or '',
+            'SENDER_WARD': self.sender_id.ward_id.viettelpost_wards_id,
+            'SENDER_DISTRICT': self.sender_id.district_id.viettelpost_district_id,
+            'SENDER_PROVINCE': self.sender_id.city_id.viettelpost_province_id,
             'SENDER_LATITUDE': 0,
             'SENDER_LONGITUDE': 0,
         }
@@ -200,6 +200,7 @@ class BookingViettelpostWizard(models.TransientModel):
             'receiver_district_id': self.receiver_district_id.id,
             'receiver_province_id': self.receiver_province_id.id,
             'store_id': self.store_id.id,
+            'warehouse_id': self.warehouse_id.id,
             'sender_id': self.sender_id.id,
             'sender_phone': self.sender_phone,
             'sender_street': self.sender_street,
@@ -207,7 +208,7 @@ class BookingViettelpostWizard(models.TransientModel):
             'sender_district_id': self.sender_district_id.id,
             'sender_province_id': self.sender_province_id.id,
             'deli_order_id': self.deli_order_id.id,
-            'note': self.note,
+            'note': self.note or '',
             'num_of_package': self.no_of_package,
             'fee_ship': dataclass.money_total_fee,
             'money_total': dataclass.money_total,
