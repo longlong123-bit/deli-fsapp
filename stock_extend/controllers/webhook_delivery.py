@@ -20,23 +20,14 @@ def valid_response(data, message='', status=200):
                 "message": message}
     if len(data) > 0:
         response['data'] = data
-    return werkzeug.wrappers.Response(
-        status=status, content_type="application/json; charset=utf-8", response=json.dumps(response, default=default),
-    )
+    return response
 
 
 def invalid_response(typ, message=None, status=401):
     """Invalid Response
     This will be the return value whenever the server runs into an error
     either from the client or the server."""
-    return werkzeug.wrappers.Response(
-        status=status,
-        content_type="application/json; charset=utf-8",
-        response=json.dumps(
-            {"status": "error", "message": str(message) if str(message) else "wrong arguments (missing validation)"},
-            default=datetime.datetime.isoformat,
-        ),
-    )
+    return {"status": "error", "message": str(message) if str(message) else "wrong arguments (missing validation)"},
 
 
 def validate_token(func):
@@ -117,11 +108,11 @@ class WebhookDeliController(Controller):
             payload = request.jsonrequest
             if not payload:
                 return invalid_response("Error", "No data!")
-            delivery_book = request.env['delivery.book'].sudo().search([('bl_code', '=', payload['ORDER_NUMBER'])], limit=1)
+            delivery_book = request.env['delivery.book'].sudo().search([('bl_code', '=', payload['DATA']['ORDER_NUMBER'])], limit=1)
             if not delivery_book:
-                return invalid_response("Error", "Cannot find Delivery Carrier for VTP!")
+                return invalid_response("Error", "Cannot find Delivery Carrier for VTP!", 401)
             delivery_book.write({
-                'state': payload['STATUS_NAME'],
+                'state': payload['DATA']['STATUS_NAME'],
             })
             return valid_response(payload, "Successfully!", 200)
         except Exception as error:
