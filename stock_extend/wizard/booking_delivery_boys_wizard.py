@@ -27,7 +27,7 @@ class BookingDeliveryBoysWizard(models.TransientModel):
             raise UserError(_(ustr(e)))
 
     currency_id = fields.Many2one('res.currency', string='Currency', default=lambda self: self.env.company.currency_id)
-    name = fields.Char(string='B/L code', readonly=True, default=_get_default_sequence)
+    name = fields.Char(string='B/L code', readonly=True, default=_get_default_sequence, required=True)
     warehouse_id = fields.Many2one('stock.warehouse', string='Warehouse', required=True)
     deli_carrier_id = fields.Many2one('delivery.carrier', string='Delivery Carrier', required=True, readonly=True)
 
@@ -48,6 +48,12 @@ class BookingDeliveryBoysWizard(models.TransientModel):
     est_deli = fields.Integer(string='Estimate delivery')
     weight = fields.Float(string='Weight')
     note = fields.Text(string='Note')
+
+    @api.onchange('boy_id')
+    def _onchange_boy_id(self):
+        for rec in self:
+            if rec.boy_id:
+                rec.boy_phone = rec.boy_id.phone
 
     def _get_default_hours_uom_name(self):
         return self._get_hours_uom_name()
@@ -77,12 +83,6 @@ class BookingDeliveryBoysWizard(models.TransientModel):
         for rec in self:
             rec.gram_uom_name = self._get_gram_uom_name()
 
-    @api.onchange('boy_id')
-    def _onchange_boy_id(self):
-        for rec in self:
-            if rec.boy_id:
-                rec.boy_phone = rec.boy_id.phone
-
     def _get_payload_delivery_boys(self) -> Dict[str, Any]:
         payload: dict = {
             'name': self.name,
@@ -109,7 +109,6 @@ class BookingDeliveryBoysWizard(models.TransientModel):
     def action_booking_delivery_boys(self):
         payload = self._get_payload_delivery_boys()
         delivery_boy_id = self.env['delivery.boys'].sudo().create(payload)
-
         return {
             'type': 'ir.actions.act_window',
             'name': 'Delivery Book',

@@ -1,24 +1,32 @@
 from odoo import fields, models, api
+from odoo.exceptions import UserError
 
 
 class CompleteDeliveryWizard(models.TransientModel):
-    _name = 'complete.delivery.wizard'
-    _description = 'It to confirm order delivery successfully'
+    _name = 'complete.delivery.boys.wizard'
+    _description = 'This model used confirm order delivery successfully'
 
-    def _get_delivery_order(self):
-        return self.env['stock.picking'].sudo().search([('id', '=', self._context.get('delivery_order_id'))], limit=1)
+    @api.model
+    def default_get(self, fields_list):
+        values = super(CompleteDeliveryWizard, self).default_get(fields_list)
+        if not values.get('deli_boy_id') and 'active_model' in self._context and \
+                self._context['active_model'] == 'delivery.boys':
+            values['deli_boy_id'] = self._context.get('active_id')
+        return values
 
-    delivery_order_id = fields.Many2one('stock.picking', string='Delivery order', default=_get_delivery_order, required=True, readonly=True)
-    order_confirmation_image = fields.Binary("Order confirmation Image", required=True, attachment=True, help="Order confirmation Image")
+    deli_boy_id = fields.Many2one('delivery.boys', string='Delivery boys order', required=True, readonly=True)
+    order_image = fields.Binary('Order Image', required=True, attachment=True, help='Order confirmation Image')
 
-    def action_confirm_delivery_boys(self):
+    def action_done_delivery_boys(self):
+        delivery_book_id = self.env['delivery.book'].search([('bl_code', '=', self.deli_boy_id.name)])
+        if not delivery_book_id:
+            raise UserError(f'The bl code {self.deli_boy_id.name} not found in delivery book management.')
         self.env['ir.attachment'].sudo().create({
-            'name': '%s - %s - %s' % ("Confirm delivery", self.delivery_order_id.delivery_order_id.name, self.delivery_order_id.name),
-            'res_id': self._context.get('delivery_boys_id'),
-            'res_model': 'delivery.boys',
-            'datas': self.order_confirmation_image,
+            'name': f'{self.deli_boy_id.name}_image_complete',
+            'res_id': self.deli_boy_id.id,
+            'res_model': self.deli_boy_id._name,
+            'datas': self.order_image,
             'public': True,
         })
-        self.delivery_order_id.write({
-            'state': 'done'
-        })
+        self.deli_boy_id.write({'state': 'completed'})
+        delivery_book_id.write({'state': 'Giao hàng thành công'})

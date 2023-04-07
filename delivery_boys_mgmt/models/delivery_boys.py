@@ -1,4 +1,5 @@
 from odoo import models, fields, api, _
+from odoo.exceptions import UserError
 
 
 class DeliveryBoys(models.Model):
@@ -6,13 +7,9 @@ class DeliveryBoys(models.Model):
     _inherit = ['mail.thread']
     _description = 'Manage deliveries by home shipper'
 
-    name = fields.Char(string='B/L code', readonly=True)
+    name = fields.Char(string='B/L code', readonly=True, required=True)
     deli_boy_id = fields.Many2one('res.partner', 'Delivery Boy', tracking=True)
     deli_phone = fields.Char(string='Phone', tracking=True)
-    deli_street = fields.Char(string='Street')
-    deli_ward_id = fields.Many2one('res.ward', string='Ward')
-    deli_district_id = fields.Many2one('res.district', string='District')
-    deli_province_id = fields.Many2one('res.city', string='Province')
 
     deli_order_id = fields.Many2one('stock.picking', 'Delivery Order', readonly=True, required=True, tracking=True)
     sale_id = fields.Many2one('sale.order', related='deli_order_id.sale_id', string='Sale order')
@@ -72,15 +69,15 @@ class DeliveryBoys(models.Model):
     def _onchange_delivery_boy_phone(self):
         if self.deli_boy_id:
             self.deli_phone = self.deli_boy_id.phone
-            self.deli_street = self.deli_boy_id.street
-            self.deli_ward_id = self.deli_boy_id.ward_id.id
-            self.deli_district_id = self.deli_boy_id.district_id.id
-            self.deli_province_id = self.deli_boy_id.city_id.id
 
     @api.onchange('partner_id')
     def _onchange_partner_phone(self):
         if self.partner_id:
             self.partner_phone = self.partner_id.phone
+            self.street = self.partner_id.street
+            self.ward_id = self.partner_id.ward_id.id
+            self.district_id = self.partner_id.district_id.id
+            self.city_id = self.partner_id.city_id.id
 
     def _get_payload_delivery_book(self):
         base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
@@ -95,12 +92,12 @@ class DeliveryBoys(models.Model):
             'receiver_ward_id': self.ward_id.id,
             'receiver_district_id': self.district_id.id,
             'receiver_province_id': self.city_id.id,
-            'sender_id': self.warehouse_id.id,
-            'deli_boy_id': self.deli_boy_id.id,
-            'sender_street': self.deli_street,
-            'sender_ward_id': self.deli_ward_id.id,
-            'sender_district_id': self.deli_district_id.id,
-            'sender_province_id': self.deli_province_id.id,
+            'warehouse_id': self.warehouse_id.id,
+            'sender_id': self.deli_boy_id.id,
+            'sender_street': self.deli_boy_id.street,
+            'sender_ward_id': self.deli_boy_id.ward_id.id,
+            'sender_district_id': self.deli_boy_id.district_id.id,
+            'sender_province_id': self.deli_boy_id.city_id.id,
             'sender_phone': self.deli_phone,
             'deli_order_id': self.deli_order_id.id,
             'note': self.note,
@@ -112,7 +109,7 @@ class DeliveryBoys(models.Model):
             'est_deli_time': self.est_deli_time,
             'tracking_link': tracking_link,
             'cus_receivable': self.cus_receivable,
-            'state': 'Shipper đã nhận hàng',
+            'state': 'Đã nhận hàng',
         }
         return payload
 
@@ -129,16 +126,22 @@ class DeliveryBoys(models.Model):
             'target': 'current',
         }
 
-    def action_done(self):
+    def action_in_process(self):
+        delivery_book_id = self.env['delivery.book'].search([('bl_code', '=', self.name)])
+        if not delivery_book_id:
+            raise UserError(f'The bl code {self.name} not found in delivery book management.')
+        delivery_book_id.write({'state': 'Đang giao hàng'})
+        self.write({'state': 'in_process'})
+
+    def action_complete(self):
         return {
-            'name': _('Complete delivery'),
+            'name': _('Complete Delivery'),
             'view_mode': 'form',
             'view_type': 'form',
-            'view_id': self.env.ref('delivery_boys_mgmt.complete_delivery_wizard_form_view').id,
-            'res_model': 'complete.delivery.wizard',
+            'view_id': self.env.ref('delivery_boys_mgmt.complete_delivery_boys_wizard_form_view').id,
+            'res_model': 'complete.delivery.boys.wizard',
             'context': {
-                'delivery_order_id': self.deli_order_id.id,
-                'delivery_boys_id': self.id,
+                'default_deli_order_id': self.deli_order_id.id,
             },
             'type': 'ir.actions.act_window',
             'target': 'new'
@@ -148,11 +151,7 @@ class DeliveryBoys(models.Model):
         self.write({
             'state': 'new',
             'deli_boy_id': False,
-            'deli_phone': False,
-            'deli_street': False,
-            'deli_ward_id': False,
-            'deli_district_id': False,
-            'deli_province_id': False
+            'deli_phone': False
         })
 
     def action_cancel(self):
@@ -166,6 +165,5 @@ class DeliveryBoys(models.Model):
             'context': {
                 'delivery_order_id': self.deli_order_id.id,
             },
-            'type': 'ir.actions.act_window',
             'target': 'new'
         }

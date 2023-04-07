@@ -8,12 +8,12 @@
             <field name="priority" eval="8"/>
             <field name="arch" type="xml">
                 <field name="type" position="after">
-                    <field name="partner_code" attrs="{'invisible': [('type', '!=', 'delivery_carrier')], 'required': [('type', '=', 'delivery_carrier')]}"/>
+                    <field name="partner_code" attrs="{'invisible': [('type', '!=', 'webhook_service')], 'required': [('type', '=', 'webhook_service')]}"/>
                 </field>
                 <xpath expr="//sheet//notebook//page[@name='internal_notes']" position="after">
-                    <page name='Authorization' string="Authorization" attrs="{'invisible': [('type', '!=', 'delivery_carrier')]}">
+                    <page string="Authorization" attrs="{'invisible': [('type', '!=', 'webhook_service')]}">
                         <button name="get_access_token" type="object" class="oe_highlight" string="Get Access Token"/>
-                        <group name="authorization">
+                        <group>
                             <field name="authorization" placeholder="Token of ..."/>
                         </group>
                     </page>

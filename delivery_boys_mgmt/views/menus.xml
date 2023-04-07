@@ -2,9 +2,9 @@
 <odoo>
     <menuitem id="menu_delivery_boys_mgmt"
               name="Delivery Boys Management"
-              sequence="100"
-              parent="delivery.menu_delivery"
+              sequence="1"
+              groups="delivery_boys_mgmt.group_delivery_boys"
+              parent="stock_extend.menu_delivery_management"
               action="delivery_boys_action_view"
-              groups="base.group_system"
     />
 </odoo>

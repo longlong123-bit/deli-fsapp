@@ -12,6 +12,7 @@
                 </div>
                 <group>
                     <group>
+                        <field name="warehouse_id" options="{'no_create_edit': True, 'no_open': True}"/>
                         <field name="sender_id" options="{'no_create_edit': True, 'no_open': True}"/>
                         <field name="sender_phone" widget="phone"/>
                         <label for="sender_street" string="Address"/>
@@ -38,8 +39,6 @@
                             <field name="receiver_province_id" class="o_address_zip" placeholder="City" options="{'no_create': True, 'no_open': True}"/>
                         </div>
                         <field name="cod"/>
-                        <field name="weight"/>
-                        <field name="is_back" widget="boolean_toggle"/>
                         <field name="note"/>
                     </group>
                 </group>
