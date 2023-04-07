@@ -9,7 +9,6 @@
     'license': 'LGPL-3',
     'depends': ['base', 'contacts', 'mail', 'stock', 'tr_connect_ahamove', 'delivery_viettelpost'],
     'data': [
-        'security/deli_boys_security.xml',
         'security/ir.model.access.csv',
         'data/delivery_carrier_data.xml',
         'data/res_partner_data.xml',

@@ -9,6 +9,7 @@
     'license': 'LGPL-3',
     'depends': ['base', 'mail', 'viettelpost_address', 'stock_extend', 'contacts', 'stock', 'sale', 'delivery'],
     'data': [
+        'security/deli_boys_security.xml',
         'security/ir.model.access.csv',
         'data/sequence.xml',
         'wizard/cancel_delivery_boys_wizard_views.xml',
